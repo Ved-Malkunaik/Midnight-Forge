@@ -1,5 +1,5 @@
 {
-  "name": "@midnight-ntwrk/bboard-contract",
+  "name": "@midnight-ntwrk/midnight-forge-contract",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -13,12 +13,12 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -Rf ./src/managed ./dist/managed && cp ./src/bboard.compact ./dist",
+    "build": "tsc --project tsconfig.build.json && node -e \"fs.cpSync('./src/managed', './dist/managed', { recursive: true })\"",
     "ci": "npm run compact && npm run typecheck && npm run lint && npm run build && npm run test",
-    "compact": "compact compile src/bboard.compact ./src/managed/bboard",
+    "compact": "compact compile src/midnight-forge.compact ./src/managed/midnight-forge",
     "lint": "eslint src",
-    "prepack": "npm build",
-    "test": "vitest",
+    "prepack": "npm run build",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

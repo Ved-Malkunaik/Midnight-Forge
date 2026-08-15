@@ -1,0 +1,374 @@
+// This file is part of midnight-forge.
+// Copyright (C) Midnight Foundation
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License");
+// You may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+/* **********************************************************************
+ * Midnight Forge
+ *
+ * A decentralized software contribution platform on the Midnight Network.
+ *
+ * Resource-based authorization only: a wallet is never granted a global
+ * "publisher" or "contributor" role. Instead, every protected circuit
+ * proves that the caller's dApp-scoped identity matches the identity
+ * stored on the resource it wants to change (project owner, contribution
+ * creator/claimant, reward recipient).
+ *
+ * The GitHub repository is deliberately kept OUT of the contract. The
+ * contract stores opaque references (issue / PR identifiers) so the
+ * on-chain contribution can be linked to off-chain GitHub activity,
+ * while GitHub itself stays in the API/backend layer.
+ **********************************************************************/
+
+/* ======================================================================
+ * TYPES
+ * ====================================================================== */
+
+export enum ContributionStatus {
+  OPEN,
+  CLAIMED,
+  PR_SUBMITTED,
+  MERGED,
+  ACCEPTED,
+  REWARDED
+}
+
+export enum Difficulty {
+  LOW,
+  MEDIUM,
+  HIGH,
+  EXPERT
+}
+
+export enum RewardState {
+  UNFUNDED,
+  FUNDED,
+  RELEASABLE,
+  RELEASED
+}
+
+struct Project {
+  owner: Bytes<32>,
+  name: Opaque<"string">,
+  description: Opaque<"string">,
+  githubRepository: Opaque<"string">,
+  deploymentUrl: Opaque<"string">,
+  improvementAreas: Opaque<"string">,
+  createdAt: Uint<64>,
+}
+
+struct Contribution {
+  projectId: Bytes<32>,
+  creator: Bytes<32>,
+  title: Opaque<"string">,
+  description: Opaque<"string">,
+  difficulty: Difficulty,
+  rewardAmount: Uint<64>,
+  status: ContributionStatus,
+  claimedBy: Bytes<32>,
+  githubIssueReference: Opaque<"string">,
+  githubPrReference: Opaque<"string">,
+  rewardState: RewardState,
+}
+
+/* ======================================================================
+ * LEDGER STATE (PUBLIC)
+ * ====================================================================== */
+
+export ledger projects: Map<Bytes<32>, Project>;
+
+export ledger contributions: Map<Bytes<32>, Contribution>;
+
+constructor() {
+}
+
+/* ======================================================================
+ * PRIVACY / WITNESSES
+ * ====================================================================== */
+
+// The only piece of private state in Midnight Forge is the caller's
+// dApp-scoped secret key. It never appears on the ledger: circuits only
+// ever disclose its (keyed) digest, `dappUserKey`, so authorizations are
+// proven in zero knowledge while the secret itself remains private.
+witness localSecretKey(): Bytes<32>;
+
+// Computes a keyed digest of the caller's secret, scoped to this product
+// so Midnight Forge identities are linkable inside the application but
+// not across other Midnight applications.
+circuit dappUserKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>(
+    [pad(32, "midnight-forge:user:"), pad(32, "core"), sk]);
+}
+
+// Returns the caller's dApp-scoped public identity.
+circuit callerIdentity(): Bytes<32> {
+  return dappUserKey(localSecretKey());
+}
+
+/* ======================================================================
+ * PROJECT REGISTRY
+ * ====================================================================== */
+
+// Registers a new project. The caller becomes the project owner and the
+// only actor authorized to update the project or to create / accept
+// contributions against it. There is no global "publisher" role.
+export circuit registerProject(projectId: Bytes<32>,
+                               name: Opaque<"string">,
+                               description: Opaque<"string">,
+                               githubRepository: Opaque<"string">,
+                               deploymentUrl: Opaque<"string">,
+                               improvementAreas: Opaque<"string">,
+                               createdAt: Uint<64>): [] {
+  assert(!projects.member(disclose(projectId)), "project already exists");
+  projects.insert(disclose(projectId), disclose(Project {
+    owner: disclose(callerIdentity()),
+    name: disclose(name),
+    description: disclose(description),
+    githubRepository: disclose(githubRepository),
+    deploymentUrl: disclose(deploymentUrl),
+    improvementAreas: disclose(improvementAreas),
+    createdAt: disclose(createdAt),
+  }));
+}
+
+// Updates project information. Only the project owner may update it.
+export circuit updateProject(projectId: Bytes<32>,
+                             name: Opaque<"string">,
+                             description: Opaque<"string">,
+                             githubRepository: Opaque<"string">,
+                             deploymentUrl: Opaque<"string">,
+                             improvementAreas: Opaque<"string">): [] {
+  assert(projects.member(disclose(projectId)), "project does not exist");
+  const project = projects.lookup(disclose(projectId));
+  assert(project.owner == disclose(callerIdentity()), "only the project owner can update the project");
+  projects.insert(disclose(projectId), disclose(Project {
+    owner: project.owner,
+    name: disclose(name),
+    description: disclose(description),
+    githubRepository: disclose(githubRepository),
+    deploymentUrl: disclose(deploymentUrl),
+    improvementAreas: disclose(improvementAreas),
+    createdAt: project.createdAt,
+  }));
+}
+
+// Returns the public project record. Fails if the project does not exist.
+export circuit getProject(projectId: Bytes<32>): Project {
+  assert(projects.member(disclose(projectId)), "project does not exist");
+  return projects.lookup(disclose(projectId));
+}
+
+/* ======================================================================
+ * CONTRIBUTION REGISTRY (LIFECYCLE)
+ * ====================================================================== */
+
+// Creates a contribution opportunity on a project. Authorized to the
+// project owner only. The reward is defined up front, before any
+// contributor begins work. The contribution starts OPEN and UNFUNDED.
+export circuit createContribution(contributionId: Bytes<32>,
+                                  projectId: Bytes<32>,
+                                  title: Opaque<"string">,
+                                  description: Opaque<"string">,
+                                  difficulty: Difficulty,
+                                  rewardAmount: Uint<64>,
+                                  githubIssueReference: Opaque<"string">,
+                                  githubPrReference: Opaque<"string">): [] {
+  assert(projects.member(disclose(projectId)), "project does not exist");
+  assert(projects.lookup(disclose(projectId)).owner == disclose(callerIdentity()),
+         "only the project owner can create a contribution");
+  assert(!contributions.member(disclose(contributionId)), "contribution already exists");
+  assert(rewardAmount > 0, "reward must be greater than zero");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: disclose(projectId),
+    creator: disclose(projects.lookup(disclose(projectId)).owner),
+    title: disclose(title),
+    description: disclose(description),
+    difficulty: disclose(difficulty),
+    rewardAmount: disclose(rewardAmount),
+    status: disclose(ContributionStatus.OPEN),
+    claimedBy: disclose(pad(32, "")),
+    githubIssueReference: disclose(githubIssueReference),
+    githubPrReference: disclose(githubPrReference),
+    rewardState: disclose(RewardState.UNFUNDED),
+  }));
+}
+
+// Claims an OPEN contribution. Anyone may claim. The project owner may
+// not claim a contribution on their own project (self-dealing guard).
+export circuit claimContribution(contributionId: Bytes<32>): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(contribution.status == ContributionStatus.OPEN, "contribution is not open");
+  assert(projects.member(contribution.projectId), "project does not exist");
+  assert(projects.lookup(contribution.projectId).owner != disclose(callerIdentity()),
+         "project owner cannot claim their own contribution");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: disclose(ContributionStatus.CLAIMED),
+    claimedBy: disclose(callerIdentity()),
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: contribution.githubPrReference,
+    rewardState: contribution.rewardState,
+  }));
+}
+
+// Associates the claimed contribution with a GitHub pull request.
+// Authorized to the claimant only. The contract stores the PR identifier
+// as an opaque reference; GitHub itself stays outside the contract.
+export circuit submitContribution(contributionId: Bytes<32>,
+                                  githubPrReference: Opaque<"string">): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(contribution.status == ContributionStatus.CLAIMED, "contribution must be claimed first");
+  assert(contribution.claimedBy == disclose(callerIdentity()),
+         "only the claimant can submit a pull request reference");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: disclose(ContributionStatus.PR_SUBMITTED),
+    claimedBy: contribution.claimedBy,
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: disclose(githubPrReference),
+    rewardState: contribution.rewardState,
+  }));
+}
+
+// Marks a contribution as merged. Authorized to the project owner, who
+// reviews the GitHub PR. PR_SUBMITTED -> MERGED.
+export circuit markContributionMerged(contributionId: Bytes<32>): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(projects.member(contribution.projectId), "project does not exist");
+  assert(projects.lookup(contribution.projectId).owner == disclose(callerIdentity()),
+         "only the project owner can mark a contribution as merged");
+  assert(contribution.status == ContributionStatus.PR_SUBMITTED,
+         "contribution must have a submitted pull request");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: disclose(ContributionStatus.MERGED),
+    claimedBy: contribution.claimedBy,
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: contribution.githubPrReference,
+    rewardState: contribution.rewardState,
+  }));
+}
+
+// Project owner accepts a merged contribution. MERGED -> ACCEPTED and the
+// reward becomes RELEASABLE. This is the prerequisite for releasing it.
+export circuit acceptContribution(contributionId: Bytes<32>): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(projects.member(contribution.projectId), "project does not exist");
+  assert(projects.lookup(contribution.projectId).owner == disclose(callerIdentity()),
+         "only the project owner can accept a contribution");
+  assert(contribution.status == ContributionStatus.MERGED,
+         "contribution must be merged before it can be accepted");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: disclose(ContributionStatus.ACCEPTED),
+    claimedBy: contribution.claimedBy,
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: contribution.githubPrReference,
+    rewardState: disclose(RewardState.RELEASABLE),
+  }));
+}
+
+/* ======================================================================
+ * REWARD LOGIC
+ * ====================================================================== */
+
+// Records that the publisher has committed funds for the reward.
+// Authorized to the project owner. The reward must still be UNFUNDED and
+// not yet accepted. This is a reward-state marker: actual token movement
+// (escrow) is handled by the API/value layer; the contract stays
+// authoritative for reward state and release authorization.
+export circuit fundReward(contributionId: Bytes<32>): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(projects.member(contribution.projectId), "project does not exist");
+  assert(projects.lookup(contribution.projectId).owner == disclose(callerIdentity()),
+         "only the project owner can fund the reward");
+  assert(contribution.rewardState == RewardState.UNFUNDED, "reward is already funded");
+  assert(contribution.status != ContributionStatus.ACCEPTED
+         && contribution.status != ContributionStatus.REWARDED,
+         "reward is already finalized");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: contribution.status,
+    claimedBy: contribution.claimedBy,
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: contribution.githubPrReference,
+    rewardState: disclose(RewardState.FUNDED),
+  }));
+}
+
+// Releases the predefined reward to the contributor that claimed the
+// contribution. Authorized to the claimant only (the reward recipient).
+// ACCEPTED + RELEASABLE -> REWARDED + RELEASED. Irreversible.
+export circuit releaseReward(contributionId: Bytes<32>): [] {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  const contribution = contributions.lookup(disclose(contributionId));
+  assert(contribution.status == ContributionStatus.ACCEPTED,
+         "contribution must be accepted before the reward can be released");
+  assert(contribution.rewardState == RewardState.RELEASABLE,
+         "reward is not releasable");
+  assert(contribution.claimedBy == disclose(callerIdentity()),
+         "only the contributing claimant can receive the reward");
+  contributions.insert(disclose(contributionId), disclose(Contribution {
+    projectId: contribution.projectId,
+    creator: contribution.creator,
+    title: contribution.title,
+    description: contribution.description,
+    difficulty: contribution.difficulty,
+    rewardAmount: contribution.rewardAmount,
+    status: disclose(ContributionStatus.REWARDED),
+    claimedBy: contribution.claimedBy,
+    githubIssueReference: contribution.githubIssueReference,
+    githubPrReference: contribution.githubPrReference,
+    rewardState: disclose(RewardState.RELEASED),
+  }));
+}
+
+// Returns the public contribution record. Fails if it does not exist.
+export circuit getContribution(contributionId: Bytes<32>): Contribution {
+  assert(contributions.member(disclose(contributionId)), "contribution does not exist");
+  return contributions.lookup(disclose(contributionId));
+}

@@ -1,8 +1,8 @@
-// This file is part of midnightntwrk/example-bboard.
+// This file is part of midnight-forge.
 // Copyright (C) Midnight Foundation
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License");
-// You may not use this file except in compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
@@ -15,15 +15,15 @@
 
 import { CompiledContract } from "@midnight-ntwrk/midnight-js-protocol/compact-js";
 
-export * from "./managed/bboard/contract/index.js";
-export * from "./witnesses";
+export * from "./managed/midnight-forge/contract/index.js";
+export * from "./witnesses.js";
 
-import * as CompiledBBoardContract from "./managed/bboard/contract/index.js";
-import * as Witnesses from "./witnesses";
+import * as CompiledMidnightForgeContract from "./managed/midnight-forge/contract/index.js";
+import * as Witnesses from "./witnesses.js";
 
-export const CompiledBBoardContractContract = CompiledContract.make<
-  CompiledBBoardContract.Contract<Witnesses.BBoardPrivateState>
->("BBoard", CompiledBBoardContract.Contract<Witnesses.BBoardPrivateState>).pipe(
+export const CompiledMidnightForgeContractContract = CompiledContract.make<
+  CompiledMidnightForgeContract.Contract<Witnesses.MidnightForgePrivateState>
+>("MidnightForge", CompiledMidnightForgeContract.Contract<Witnesses.MidnightForgePrivateState>).pipe(
   CompiledContract.withWitnesses(Witnesses.witnesses),
-  CompiledContract.withCompiledFileAssets("./managed/bboard"),
+  CompiledContract.withCompiledFileAssets("./managed/midnight-forge"),
 );
