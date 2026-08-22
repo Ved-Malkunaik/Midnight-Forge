@@ -1,40 +1,129 @@
-// This file is part of midnightntwrk/example-bboard.
-// Copyright (C) Midnight Foundation
-// SPDX-License-Identifier: Apache-2.0
-// Licensed under the Apache License, Version 2.0 (the "License");
-// You may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-import { createTheme, alpha } from '@mui/material';
-
-const midnightGrey = alpha('#a8a8a8', 0.7);
+import { createTheme } from '@mui/material';
 
 export const theme = createTheme({
-  typography: {
-    fontFamily: 'Helvetica',
-    allVariants: {
-      color: 'white',
-    },
-  },
   palette: {
+    mode: 'dark',
+    background: {
+      default: '#0B0C10',
+      paper: '#131620',
+    },
     primary: {
-      main: midnightGrey,
-      light: alpha(midnightGrey, 0.5),
-      dark: alpha(midnightGrey, 0.9),
+      main: '#3B82F6', // Restrained blue accent
+      light: '#60A5FA',
+      dark: '#1D4ED8',
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#8c8c8c',
+      main: '#64748B',
+      light: '#94A3B8',
+      dark: '#334155',
     },
-    background: {
-      default: '#464655',
+    text: {
+      primary: '#F8FAFC',
+      secondary: '#94A3B8',
+    },
+    divider: '#1E2332',
+    error: {
+      main: '#EF4444',
+    },
+    success: {
+      main: '#10B981',
+    },
+    warning: {
+      main: '#F59E0B',
+    },
+  },
+  typography: {
+    fontFamily: [
+      'Inter',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+    h1: {
+      fontWeight: 700,
+      fontSize: '2.5rem',
+      letterSpacing: '-0.02em',
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: '1.875rem',
+      letterSpacing: '-0.01em',
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: '1.5rem',
+    },
+    subtitle1: {
+      color: '#94A3B8',
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#0B0C10',
+          backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          color: '#F8FAFC',
+          minHeight: '100vh',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '6px',
+          padding: '8px 16px',
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+        contained: {
+          backgroundColor: '#3B82F6',
+          '&:hover': {
+            backgroundColor: '#2563EB',
+          },
+        },
+        outlined: {
+          borderColor: '#262D3D',
+          color: '#F8FAFC',
+          '&:hover': {
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          backgroundColor: '#131620',
+          border: '1px solid #1E2332',
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#131620',
+          border: '1px solid #262D3D',
+          borderRadius: '12px',
+        },
+      },
     },
   },
 });

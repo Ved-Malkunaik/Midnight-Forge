@@ -18,6 +18,11 @@ import { CompiledContract } from "@midnight-ntwrk/midnight-js-protocol/compact-j
 export * from "./managed/midnight-forge/contract/index.js";
 export * from "./witnesses.js";
 
+export enum State {
+  VACANT = 0,
+  OCCUPIED = 1,
+}
+
 import * as CompiledMidnightForgeContract from "./managed/midnight-forge/contract/index.js";
 import * as Witnesses from "./witnesses.js";
 

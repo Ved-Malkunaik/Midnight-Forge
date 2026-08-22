@@ -1,7 +1,7 @@
 {
-  "name": "@midnight-ntwrk/example-bboard",
+  "name": "@midnight-ntwrk/midnight-forge",
   "version": "0.1.0",
-  "author": "IOG",
+  "author": "Midnight Forge",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -10,11 +10,17 @@
   },
   "workspaces": {
     "packages": [
-      "bboard-cli",
-      "bboard-ui",
+      "midnight-forge-cli",
+      "midnight-forge-ui",
       "api",
       "contract"
     ]
+  },
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "setup": "npm run compact --workspace=contract && npm run build",
+    "deploy": "npm run deploy:preprod",
+    "deploy:preprod": "npm run build --workspace=contract && npm run build --workspace=api && npm run preprod-remote --workspace=midnight-forge-cli"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",

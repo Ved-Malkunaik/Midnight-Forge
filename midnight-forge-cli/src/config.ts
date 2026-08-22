@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   EnvironmentConfiguration,
   getTestEnvironment,
@@ -31,15 +32,15 @@ export interface Config {
   readonly generateDust: boolean;
 }
 
-export const currentDir = path.resolve(new URL(import.meta.url).pathname, '..');
+export const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 export class StandaloneConfig implements Config {
   getEnvironment(logger: Logger): TestEnvironment {
     return getTestEnvironment(logger) as TestEnvironment;
   }
-  privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
-  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
+  privateStateStoreName = 'midnight-forge-private-state';
+  logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString().replace(/:/g, '-')}.log`);
+  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'midnight-forge');
   generateDust = false;
 }
 
@@ -48,9 +49,9 @@ export class PreviewRemoteConfig implements Config {
     setNetworkId('preview');
     return new PreviewTestEnvironment(logger);
   }
-  privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preview-remote', `${new Date().toISOString()}.log`);
-  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
+  privateStateStoreName = 'midnight-forge-private-state';
+  logDir = path.resolve(currentDir, '..', 'logs', 'preview-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
+  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'midnight-forge');
   generateDust = true;
 }
 
@@ -59,23 +60,21 @@ export class PreprodRemoteConfig implements Config {
     setNetworkId('preprod');
     return new PreprodTestEnvironment(logger);
   }
-  privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preprod-remote', `${new Date().toISOString()}.log`);
-  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
+  privateStateStoreName = 'midnight-forge-private-state';
+  logDir = path.resolve(currentDir, '..', 'logs', 'preprod-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
+  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'midnight-forge');
   generateDust = true;
 }
 
 export class PreviewTestEnvironment extends RemoteTestEnvironment {
   constructor(logger: Logger) {
     super(logger);
+    this.start = async () => this.getEnvironmentConfiguration();
+    this.shutdown = async () => {};
   }
 
   private getProofServerUrl(): string {
-    const container = this.proofServerContainer as { getUrl(): string } | undefined;
-    if (!container) {
-      throw new Error('Proof server container is not available.');
-    }
-    return container.getUrl();
+    return 'http://127.0.0.1:6300';
   }
 
   getEnvironmentConfiguration(): EnvironmentConfiguration {
@@ -95,14 +94,12 @@ export class PreviewTestEnvironment extends RemoteTestEnvironment {
 export class PreprodTestEnvironment extends RemoteTestEnvironment {
   constructor(logger: Logger) {
     super(logger);
+    this.start = async () => this.getEnvironmentConfiguration();
+    this.shutdown = async () => {};
   }
 
   private getProofServerUrl(): string {
-    const container = this.proofServerContainer as { getUrl(): string } | undefined;
-    if (!container) {
-      throw new Error('Proof server container is not available.');
-    }
-    return container.getUrl();
+    return 'http://127.0.0.1:6300';
   }
 
   getEnvironmentConfiguration(): EnvironmentConfiguration {

@@ -46,17 +46,20 @@ export const generateDust = async (
   unshieldedState: UnshieldedWalletState,
   walletFacade: WalletFacade,
 ) => {
+  logger.info('Syncing dust wallet subsystem with preprod indexer...');
   const dustState = await walletFacade.dust.waitForSyncedState();
+  logger.info('Dust wallet subsystem synced.');
+
   const networkId = getNetworkId();
   const unshieldedKeystore = createKeystore(getUnshieldedSeed(walletSeed), networkId);
   const utxos = unshieldedState.availableCoins.filter((coin) => !coin.meta.registeredForDustGeneration);
 
   if (utxos.length === 0) {
-    logger.info('No unregistered UTXOs found for dust generation.');
+    logger.info('All UTXOs already registered for dust generation.');
     return;
   }
 
-  logger.info(`Generating dust with ${utxos.length} UTXOs...`);
+  logger.info(`Registering ${utxos.length} UTXOs for dust generation on-chain...`);
 
   const recipe = await walletFacade.registerNightUtxosForDustGeneration(
     utxos,
@@ -67,14 +70,16 @@ export const generateDust = async (
   const transaction = await walletFacade.finalizeRecipe(recipe);
   const txId = await walletFacade.submitTransaction(transaction);
 
+  logger.info(`Dust generation transaction submitted with txId: ${txId}`);
+  logger.info(`Waiting for block confirmation and dust balance indexing...`);
+
   const dustBalance = await rx.firstValueFrom(
     walletFacade.state().pipe(
       rx.filter((s) => s.dust.balance(new Date()) > 0n),
       rx.map((s) => s.dust.balance(new Date())),
     ),
   );
-  logger.info(`Dust generation transaction submitted with txId: ${txId}`);
-  logger.info(`Receiver dust balance after generation: ${dustBalance}`);
+  logger.info(`Receiver dust balance confirmed: ${dustBalance}`);
 
   return txId;
 };

@@ -16,7 +16,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 // import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
@@ -25,14 +24,18 @@ export default defineConfig({
   build: {
     target: 'esnext',
     minify: false,
-    rollupOptions: {
+    rolldownOptions: {
+      checks: {
+        importIsUndefined: false,
+        pluginTimings: false,
+      },
       output: {
         manualChunks: (id) => {
           // Separate chunk for WASM modules to avoid top-level await issues
           if (id.includes('onchain-runtime-v3')) return 'wasm';
         },
       },
-      },
+    },
     commonjsOptions: {
       // Transform CommonJS to ESM more aggressively
       transformMixedEsModules: true,
@@ -45,11 +48,6 @@ export default defineConfig({
     react(),
     // Configure WASM plugin with more options
     wasm(),
-    topLevelAwait({
-      // Be more permissive with top-level await
-      promiseExportName: '__tla',
-      promiseImportName: (i) => `__tla_${i}`,
-    }),
     // Custom resolver for handling problematic modules
     {
       name: 'wasm-module-resolver',
@@ -92,10 +90,6 @@ export default defineConfig({
     ],
   },
   define: {},
-  checks: {
-    importIsUndefined: false,
-    pluginTimings: false,
-  },
   // Add specific import configuration for more control
   resolve: {
     // Ensure WASM files are loaded properly

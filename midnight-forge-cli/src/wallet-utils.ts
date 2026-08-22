@@ -52,8 +52,6 @@ const isProgressStrictlyComplete = (progress: unknown): boolean => {
 };
 
 const isFacadeStateSynced = (state: FacadeState): boolean =>
-  isProgressStrictlyComplete(state.shielded.state.progress) &&
-  isProgressStrictlyComplete(state.dust.state.progress) &&
   isProgressStrictlyComplete(state.unshielded.progress);
 
 export const syncWallet = (logger: Logger, wallet: WalletFacade, throttleTime = 2_000) => {
@@ -113,18 +111,18 @@ export const waitForUnshieldedFunds = async (
   const initialBalance = initialState.balances[tokenType.raw];
   if (initialBalance === undefined || initialBalance === 0n) {
     logger.info(`Your wallet initial balance is: 0 (not yet initialized)`);
-    logger.info(`Waiting to receive tokens...`);
+    logger.info(`Waiting for preprod indexer sync & transaction confirmation (this can take 30-90 seconds)...`);
     return Rx.firstValueFrom(
       wallet.state().pipe(
+        Rx.throttleTime(5_000),
         Rx.tap((state: FacadeState) => {
           const balance = state.unshielded.balances[tokenType.raw] ?? 0n;
-          logger.debug(
-            `Wallet funds state emission: { synced=${isFacadeStateSynced(state)}, balance=${balance.toString()} }`,
+          logger.info(
+            `Checking indexer... unshielded balance: ${balance.toString()}`,
           );
         }),
-        Rx.throttleTime(throttleTime),
         Rx.filter(
-          (state: FacadeState) => isFacadeStateSynced(state) && (state.unshielded.balances[tokenType.raw] ?? 0n) > 0n,
+          (state: FacadeState) => (state.unshielded.balances[tokenType.raw] ?? 0n) > 0n,
         ),
         Rx.tap(() => logger.info('Sync complete')),
         Rx.tap((state: FacadeState) => {

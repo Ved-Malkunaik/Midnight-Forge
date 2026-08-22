@@ -90,7 +90,7 @@ export const Board: React.FC<Readonly<BoardProps>> = ({ boardDeployment$ }) => {
     try {
       if (deployedBoardAPI) {
         setIsWorking(true);
-        await deployedBoardAPI.post(messagePrompt);
+        await deployedBoardAPI.post?.(messagePrompt);
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -105,7 +105,7 @@ export const Board: React.FC<Readonly<BoardProps>> = ({ boardDeployment$ }) => {
     try {
       if (deployedBoardAPI) {
         setIsWorking(true);
-        await deployedBoardAPI.takeDown();
+        await deployedBoardAPI.takeDown?.();
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -156,9 +156,9 @@ export const Board: React.FC<Readonly<BoardProps>> = ({ boardDeployment$ }) => {
     // We need the board API as well as subscribing to its `state$` observable, so that we can invoke
     // the `post` and `takeDown` methods later.
     setDeployedBoardAPI(boardDeployment.api);
-    const subscription = boardDeployment.api.state$.subscribe(setBoardState);
+    const subscription = boardDeployment.api.state$?.subscribe(setBoardState);
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, [boardDeployment, setIsWorking, setErrorMessage, setDeployedBoardAPI]);
 
@@ -188,6 +188,7 @@ export const Board: React.FC<Readonly<BoardProps>> = ({ boardDeployment$ }) => {
           <CardHeader
             avatar={
               boardState ? (
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
                 boardState.state === State.VACANT || (boardState.state === State.OCCUPIED && boardState.isOwner) ? (
                   <LockOpenIcon data-testid="post-unlocked-icon" />
                 ) : (
@@ -211,6 +212,7 @@ export const Board: React.FC<Readonly<BoardProps>> = ({ boardDeployment$ }) => {
           />
           <CardContent>
             {boardState ? (
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
               boardState.state === State.OCCUPIED ? (
                 <Typography data-testid="board-posted-message" sx={{ minHeight: 160 }} color="primary">
                   {boardState.message}
