@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -22,12 +23,14 @@ import { WalletModal } from '../WalletModal/WalletModal';
 import { WalletAccountPanel } from '../WalletAccountPanel/WalletAccountPanel';
 
 const navItems = [
-  { label: 'Explore', href: '#explore' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Contributions', href: '#contributions' },
+  { label: 'Explore', path: '/explore' },
+  { label: 'Publish', path: '/publish' },
+  { label: 'Contributor Hub', path: '/dashboard/contributor' },
+  { label: 'Publisher Hub', path: '/dashboard/projects' },
 ];
 
 export const Navbar: React.FC = () => {
+  const navigate = useNavigate();
   const { isConnected, isConnecting, status, account, connect } = useWallet();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
@@ -154,24 +157,27 @@ export const Navbar: React.FC = () => {
             py: 1,
           }}
         >
-          {/* LEFT: Wordmark / Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: { xs: 1, md: 0 } }}>
+          {/* LEFT: Logo & Wordmark */}
+          <Box
+            onClick={() => navigate('/')}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              cursor: 'pointer',
+              flexGrow: { xs: 1, md: 0 },
+            }}
+          >
             <Box
+              component="img"
+              src="/forge-logo.png"
+              alt="Midnight Forge Logo"
               sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '8px',
-                backgroundColor: '#3B82F6',
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'center',
-                fontWeight: 800,
-                color: '#FFFFFF',
-                fontSize: '1rem',
+                height: 36,
+                width: 'auto',
+                objectFit: 'contain',
               }}
-            >
-              M
-            </Box>
+            />
             <Box>
               <Typography variant="h6" color="text.primary" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
                 Midnight Forge
@@ -179,7 +185,7 @@ export const Navbar: React.FC = () => {
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}
+                sx={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}
               >
                 DECENTRALIZED MARKETPLACE
               </Typography>
@@ -204,18 +210,18 @@ export const Navbar: React.FC = () => {
             sx={{
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              gap: 4,
+              gap: 3,
               mx: 'auto',
             }}
           >
             {navItems.map((item) => (
               <Button
                 key={item.label}
-                href={item.href}
+                onClick={() => navigate(item.path)}
                 sx={{
                   color: '#94A3B8',
                   fontWeight: 500,
-                  fontSize: '0.9rem',
+                  fontSize: '0.875rem',
                   '&:hover': {
                     color: '#F8FAFC',
                     backgroundColor: 'transparent',
@@ -227,7 +233,7 @@ export const Navbar: React.FC = () => {
             ))}
           </Box>
 
-          {/* RIGHT: Wallet Button (Desktop) & Mobile Toggle */}
+          {/* RIGHT: Wallet Button & Mobile Toggle */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{renderWalletButton()}</Box>
 
@@ -259,9 +265,12 @@ export const Navbar: React.FC = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
-            Navigation
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box component="img" src="/forge-logo.png" alt="Logo" sx={{ height: 24, width: 'auto' }} />
+            <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+              Midnight Forge
+            </Typography>
+          </Box>
           <IconButton onClick={() => setMobileOpen(false)} size="small" sx={{ color: 'text.secondary' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -271,9 +280,10 @@ export const Navbar: React.FC = () => {
           {navItems.map((item) => (
             <ListItem key={item.label} disablePadding>
               <ListItemButton
-                component="a"
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate(item.path);
+                }}
                 sx={{ borderRadius: '6px', py: 1.2 }}
               >
                 <ListItemText
