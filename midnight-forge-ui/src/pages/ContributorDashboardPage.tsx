@@ -5,17 +5,17 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import { mockContributions } from '../data/mockContributions';
 import { StatusBadge, Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
+import type { Contribution } from '../types/marketplace';
 
 export const ContributorDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, account, connect } = useWallet();
 
-  const claimedTasks = mockContributions.filter((c) => c.status === 'CLAIMED');
-  const reviewTasks = mockContributions.filter((c) => c.status === 'PR_SUBMITTED' || c.status === 'MERGED');
-  const completedTasks = mockContributions.filter((c) => c.status === 'REWARDED');
+  const claimedTasks: Contribution[] = [];
+  const reviewTasks: Contribution[] = [];
+  const completedTasks: Contribution[] = [];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
@@ -88,7 +88,7 @@ export const ContributorDashboardPage: React.FC = () => {
 
         {/* Summary Stat Cards */}
         <Grid container spacing={3} sx={{ mb: 5 }}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -105,7 +105,7 @@ export const ContributorDashboardPage: React.FC = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -122,7 +122,7 @@ export const ContributorDashboardPage: React.FC = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}

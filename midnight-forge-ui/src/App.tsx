@@ -10,6 +10,7 @@ import {
   ContributorDashboardPage,
   PublisherDashboardPage,
   ProjectManagementPage,
+  FeedbackPage,
 } from './pages';
 
 /**
@@ -27,6 +28,7 @@ const App: React.FC = () => {
         <Route path="/publish" element={<PublishProjectPage />} />
         <Route path="/dashboard/contributor" element={<ContributorDashboardPage />} />
         <Route path="/dashboard/projects" element={<PublisherDashboardPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
       </Routes>
     </MainLayout>
   );

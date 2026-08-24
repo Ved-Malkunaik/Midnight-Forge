@@ -187,7 +187,7 @@ export const Navbar: React.FC = () => {
                 color="text.secondary"
                 sx={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}
               >
-                DECENTRALIZED MARKETPLACE
+                OPEN-SOURCE CONTRIBUTION PLATFORM
               </Typography>
             </Box>
             <Chip

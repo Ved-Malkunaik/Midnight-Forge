@@ -5,7 +5,7 @@
 // You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-// http://http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
 // limitations under the License.
 
 /**
- * Provides types and utilities for working with Midnight Forge contracts.
+ * Provides types and utilities for working with Midnight Forge contracts & GitHub sync.
  *
  * @packageDocumentation
  */
@@ -38,6 +38,13 @@ import { type MidnightForgeDerivedState } from './common-types.js';
 export interface DeployedMidnightForgeAPI {
   readonly deployedContractAddress: ContractAddress;
   readonly state$?: Observable<MidnightForgeDerivedState>;
+  registerProject(params: {
+    name: string;
+    description: string;
+    githubRepository: string;
+    deploymentUrl?: string;
+    improvementAreas: string[];
+  }): Promise<string>;
   post?(message: string): Promise<void>;
   takeDown?(): Promise<void>;
 }
@@ -53,6 +60,27 @@ export class MidnightForgeAPI implements DeployedMidnightForgeAPI {
   }
 
   readonly deployedContractAddress: ContractAddress;
+
+  async registerProject(params: {
+    name: string;
+    description: string;
+    githubRepository: string;
+    deploymentUrl?: string;
+    improvementAreas: string[];
+  }): Promise<string> {
+    const projectId = utils.randomBytes(32);
+    const transaction = await this.deployedContract.callTx.registerProject(
+      projectId,
+      params.name,
+      params.description,
+      params.githubRepository,
+      params.deploymentUrl ?? '',
+      params.improvementAreas.join(', '),
+      BigInt(Date.now()),
+    );
+
+    return transaction.public.txId;
+  }
 
   static async deploy(providers: MidnightForgeProviders, logger?: Logger): Promise<MidnightForgeAPI> {
     logger?.info('Deploying Midnight Forge contract...');
@@ -97,8 +125,8 @@ export class MidnightForgeAPI implements DeployedMidnightForgeAPI {
 
 export * as utils from './utils/index.js';
 export * from './common-types.js';
+export * from './services/githubSync.js';
 
 export type BBoardAPI = MidnightForgeAPI;
 export const BBoardAPI = MidnightForgeAPI;
 export type DeployedBBoardAPI = DeployedMidnightForgeAPI;
-

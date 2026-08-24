@@ -53,6 +53,7 @@ import { MidnightForgePrivateState as BBoardPrivateState } from '../../../contra
 import { inMemoryPrivateStateProvider } from '../in-memory-private-state-provider';
 import { NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
+import { getContractAddress } from '../config';
 
 /**
  * An in-progress bulletin board deployment.
@@ -103,6 +104,14 @@ export interface DeployedBoardAPIProvider {
    * while changes to each underlying board can be observed via each item in the array.
    */
   readonly boardDeployments$: Observable<Array<Observable<BoardDeployment>>>;
+  registerProject(
+    params: Parameters<DeployedBBoardAPI['registerProject']>[0],
+    onProgress?: (progress: {
+      step: 'approving' | 'submitting' | 'confirming';
+      message?: string;
+      txHash?: string;
+    }) => void,
+  ): Promise<string>;
 
   /**
    * Joins or deploys a bulletin board contract.
@@ -140,6 +149,26 @@ export class BrowserDeployedBoardManager implements DeployedBoardAPIProvider {
 
   /** @inheritdoc */
   readonly boardDeployments$: Observable<Array<Observable<BoardDeployment>>>;
+
+  async registerProject(
+    params: Parameters<DeployedBBoardAPI['registerProject']>[0],
+    onProgress?: (progress: {
+      step: 'approving' | 'submitting' | 'confirming';
+      message?: string;
+      txHash?: string;
+    }) => void,
+  ): Promise<string> {
+    onProgress?.({ step: 'approving', message: 'Requesting 1AM wallet confirmation...' });
+    const deployment = await firstValueFrom(
+      this.resolve(getContractAddress()).pipe(
+        filter((item): item is DeployedBoardDeployment => item.status === 'deployed'),
+      ),
+    );
+    onProgress?.({ step: 'submitting', message: 'Submitting registerProject transaction to Midnight Preprod...' });
+    const txHash = await deployment.api.registerProject(params);
+    onProgress?.({ step: 'confirming', txHash, message: 'Awaiting block confirmation on Midnight Network...' });
+    return txHash;
+  }
 
   /** @inheritdoc */
   resolve(contractAddress?: ContractAddress): Observable<BoardDeployment> {

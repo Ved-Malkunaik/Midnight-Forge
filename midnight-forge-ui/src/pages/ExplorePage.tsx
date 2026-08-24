@@ -14,7 +14,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { ProjectCard, EmptyState, Footer } from '../components';
-import { mockProjects } from '../data/mockProjects';
+import { useProjects } from '../contexts';
 
 const categories = ['All', 'DApps', 'Core Protocol', 'Tooling & CLI', 'SDK & Libraries', 'Infrastructure'];
 
@@ -22,9 +22,10 @@ export const ExplorePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState<'newest' | 'tasks'>('newest');
+  const { projects } = useProjects();
 
   const filteredProjects = useMemo(() => {
-    return mockProjects.filter((project) => {
+    return projects.filter((project) => {
       const matchesSearch =
         searchQuery.trim() === '' ||
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,7 +36,7 @@ export const ExplorePage: React.FC = () => {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [projects, searchQuery, selectedCategory]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
@@ -79,12 +80,14 @@ export const ExplorePage: React.FC = () => {
                 '&:hover fieldset': { borderColor: '#3B82F6' },
               },
             }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#94A3B8' }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#94A3B8' }} />
+                  </InputAdornment>
+                ),
+              },
             }}
           />
 

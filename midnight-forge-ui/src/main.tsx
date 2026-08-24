@@ -10,7 +10,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './config/theme';
 import '@midnight-ntwrk/dapp-connector-api';
 import * as pino from 'pino';
-import { DeployedBoardProvider, WalletProvider } from './contexts';
+import { DeployedBoardProvider, ProjectProvider, WalletProvider } from './contexts';
 
 const networkId = (import.meta.env.VITE_NETWORK_ID as NetworkId) || 'preprod';
 setNetworkId(networkId);
@@ -27,9 +27,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <WalletProvider>
-          <DeployedBoardProvider logger={logger}>
-            <App />
-          </DeployedBoardProvider>
+          <ProjectProvider>
+            <DeployedBoardProvider logger={logger}>
+              <App />
+            </DeployedBoardProvider>
+          </ProjectProvider>
         </WalletProvider>
       </ThemeProvider>
     </BrowserRouter>

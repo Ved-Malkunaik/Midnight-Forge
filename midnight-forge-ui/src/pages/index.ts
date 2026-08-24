@@ -6,3 +6,4 @@ export * from './PublishProjectPage';
 export * from './ContributorDashboardPage';
 export * from './PublisherDashboardPage';
 export * from './ProjectManagementPage';
+export * from './FeedbackPage';

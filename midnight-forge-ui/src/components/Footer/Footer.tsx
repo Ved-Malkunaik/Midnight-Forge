@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
       <Container maxWidth="lg">
         <Grid container spacing={4} sx={{ mb: 6 }}>
           {/* Column 1: Identity & Description */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <Box
                 component="img"
@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
           </Grid>
 
           {/* Column 2: Platform Links */}
-          <Grid item xs={6} sm={3} md={2}>
+          <Grid size={{ xs: 6, sm: 3, md: 2 }}>
             <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
               Marketplace
             </Typography>
@@ -63,11 +63,14 @@ export const Footer: React.FC = () => {
           </Grid>
 
           {/* Column 3: Resources */}
-          <Grid item xs={6} sm={3} md={3}>
+          <Grid size={{ xs: 6, sm: 3, md: 3 }}>
             <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
-              Resources & Docs
+              Resources & Feedback
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+              <Link href="/feedback" color="inherit" underline="hover" sx={{ fontSize: '0.875rem' }}>
+                Provide Feedback
+              </Link>
               <Link
                 href="https://midnight.network"
                 target="_blank"
@@ -86,20 +89,11 @@ export const Footer: React.FC = () => {
               >
                 Compact Smart Contracts
               </Link>
-              <Link
-                href="https://midnight.network"
-                target="_blank"
-                color="inherit"
-                underline="hover"
-                sx={{ fontSize: '0.875rem' }}
-              >
-                1AM Wallet Setup
-              </Link>
             </Box>
           </Grid>
 
           {/* Column 4: Community */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
               Ecosystem
             </Typography>

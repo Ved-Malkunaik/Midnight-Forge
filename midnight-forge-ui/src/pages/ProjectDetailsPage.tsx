@@ -6,15 +6,26 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CodeIcon from '@mui/icons-material/Code';
-import { mockProjects } from '../data/mockProjects';
 import { mockContributions } from '../data/mockContributions';
+import { useProjects } from '../contexts';
 import { ContributionCard, Footer, EmptyState } from '../components';
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { projects } = useProjects();
 
-  const project = mockProjects.find((p) => p.projectId === id) || mockProjects[0];
+  const project = projects.find((p) => p.projectId === id);
+  if (!project) {
+    return (
+      <EmptyState
+        title="Project Not Found"
+        description="This project is no longer available."
+        actionLabel="Back to Explore"
+        onAction={() => navigate('/explore')}
+      />
+    );
+  }
   const projectContributions = mockContributions.filter((c) => c.projectId === project.projectId);
 
   return (
@@ -103,6 +114,7 @@ export const ProjectDetailsPage: React.FC = () => {
                   startIcon={<LaunchIcon />}
                   href={project.deploymentUrl}
                   target="_blank"
+                  rel="noopener noreferrer"
                   sx={{ borderColor: '#262D3D', color: '#60A5FA', fontWeight: 600 }}
                 >
                   Live DApp

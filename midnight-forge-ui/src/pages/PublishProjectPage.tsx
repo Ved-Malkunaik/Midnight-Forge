@@ -1,17 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Paper, TextField, Button, MenuItem, Alert, Chip, Divider } from '@mui/material';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  MenuItem,
+  Alert,
+  Chip,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  CircularProgress,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PublishIcon from '@mui/icons-material/Publish';
 import { Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
+import { useDeployedBoardContext } from '../hooks/useDeployedBoardContext';
+import { useProjects } from '../contexts';
+import type { Project } from '../types/marketplace';
+import type { TxProgress } from '../services/contract/contractService';
 
 const categories = ['DApps', 'Core Protocol', 'Tooling & CLI', 'SDK & Libraries', 'Infrastructure'];
 
 export const PublishProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, connect } = useWallet();
+  const { addProject } = useProjects();
 
   const [name, setName] = useState('');
   const [shortDesc, setShortDesc] = useState('');
@@ -22,8 +42,9 @@ export const PublishProjectPage: React.FC = () => {
   const [techInput, setTechInput] = useState('');
   const [technologies, setTechnologies] = useState<string[]>(['TypeScript', 'React']);
 
-  const [submitted, setSubmitted] = useState(false);
+  const [txProgress, setTxProgress] = useState<TxProgress>({ step: 'idle' });
   const [errorMsg, setErrorMsg] = useState('');
+  const deployedBoard = useDeployedBoardContext();
 
   const handleAddTech = () => {
     if (techInput.trim() && !technologies.includes(techInput.trim())) {
@@ -36,7 +57,7 @@ export const PublishProjectPage: React.FC = () => {
     setTechnologies(technologies.filter((t) => t !== techToRemove));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !shortDesc.trim() || !githubUrl.trim()) {
       setErrorMsg('Please fill in all required fields (Project Name, Short Description, and GitHub Repository).');
@@ -48,8 +69,60 @@ export const PublishProjectPage: React.FC = () => {
       return;
     }
 
+    if (deploymentUrl.trim()) {
+      try {
+        const deploymentUrlWithProtocol = /^https?:\/\//i.test(deploymentUrl.trim())
+          ? deploymentUrl.trim()
+          : `https://${deploymentUrl.trim()}`;
+        const parsedDeploymentUrl = new URL(deploymentUrlWithProtocol);
+        if (!['http:', 'https:'].includes(parsedDeploymentUrl.protocol)) {
+          throw new Error('invalid protocol');
+        }
+        setDeploymentUrl(parsedDeploymentUrl.toString().replace(/\/$/, ''));
+      } catch {
+        setErrorMsg('Please enter a valid live app URL, such as stellar-poll-ochre.vercel.app.');
+        return;
+      }
+    }
+
     setErrorMsg('');
-    setSubmitted(true);
+    setTxProgress({ step: 'approving', message: 'Requesting 1AM wallet confirmation...' });
+    try {
+      const txHash = await deployedBoard.registerProject(
+        {
+          name,
+          description: fullDesc || shortDesc,
+          githubRepository: githubUrl,
+          deploymentUrl,
+          improvementAreas: technologies,
+        },
+        (progress) => setTxProgress(progress),
+      );
+
+      const publishedProject: Project = {
+        projectId: `project-${Date.now()}`,
+        owner: 'Connected 1AM Wallet',
+        publisherName: 'Connected Publisher',
+        name: name.trim(),
+        shortDescription: shortDesc.trim(),
+        fullDescription: fullDesc.trim() || shortDesc.trim(),
+        githubRepository: githubUrl.trim(),
+        deploymentUrl: deploymentUrl.trim() || undefined,
+        category: category as Project['category'],
+        technologies,
+        improvementAreas: technologies,
+        createdAt: new Date().toISOString(),
+        status: 'ACTIVE',
+        rewardPool: '0 tNIGHT',
+        openTaskCount: 0,
+        completedTaskCount: 0,
+      };
+      addProject(publishedProject);
+      setTxProgress({ step: 'confirmed', txHash, message: 'Project registered successfully on-chain!' });
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Transaction failed.');
+      setTxProgress({ step: 'idle' });
+    }
   };
 
   return (
@@ -73,7 +146,7 @@ export const PublishProjectPage: React.FC = () => {
             Publish a New Project
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-            Register your open-source repository on Midnight Forge to find active contributors and manage reward pools.
+            Register your open-source repository on Midnight Network via `registerProject()` contract circuit.
           </Typography>
         </Box>
 
@@ -82,7 +155,7 @@ export const PublishProjectPage: React.FC = () => {
           <Alert
             severity="warning"
             action={
-              <Button color="inherit" size="small" onClick={() => connect()}>
+              <Button color="inherit" size="small" onClick={() => void connect()}>
                 Connect 1AM Wallet
               </Button>
             }
@@ -92,7 +165,7 @@ export const PublishProjectPage: React.FC = () => {
           </Alert>
         )}
 
-        {submitted ? (
+        {txProgress.step === 'confirmed' ? (
           <Paper
             elevation={0}
             sx={{
@@ -105,12 +178,23 @@ export const PublishProjectPage: React.FC = () => {
           >
             <CheckCircleIcon sx={{ fontSize: 56, color: '#10B981', mb: 2 }} />
             <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mb: 1 }}>
-              Project Published Successfully!
+              Project Published & Confirmed On-Chain!
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
-              Your repository <strong>{name}</strong> is now registered on Midnight Forge. You can now add contribution
-              opportunities.
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2, maxWidth: 500, mx: 'auto' }}>
+              Your repository <strong>{name}</strong> is now registered on Midnight Forge Preprod.
             </Typography>
+
+            {txProgress.txHash && (
+              <Box sx={{ mb: 4, p: 2, backgroundColor: '#0B0C10', borderRadius: '8px', border: '1px solid #1E2332' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                  Midnight Transaction Reference:
+                </Typography>
+                <Typography variant="body2" color="#60A5FA" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  {txProgress.txHash}
+                </Typography>
+              </Box>
+            )}
+
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
               <Button variant="contained" onClick={() => navigate('/explore')}>
                 View in Marketplace
@@ -127,7 +211,7 @@ export const PublishProjectPage: React.FC = () => {
         ) : (
           <Paper
             component="form"
-            onSubmit={handleSubmit}
+            onSubmit={(e) => void handleSubmit(e)}
             elevation={0}
             sx={{
               p: { xs: 3, md: 5 },
@@ -269,13 +353,36 @@ export const PublishProjectPage: React.FC = () => {
                 variant="contained"
                 size="large"
                 startIcon={<PublishIcon />}
+                disabled={txProgress.step !== 'idle' && txProgress.step !== 'failed'}
                 sx={{ px: 4, fontWeight: 700 }}
               >
-                Publish Project
+                {isConnected ? 'Publish Project' : 'Connect Wallet to Publish'}
               </Button>
             </Box>
           </Paper>
         )}
+
+        {/* Transaction Progress Dialog */}
+        <Dialog open={txProgress.step !== 'idle' && txProgress.step !== 'confirmed' && txProgress.step !== 'failed'}>
+          <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Executing Midnight Transaction</DialogTitle>
+          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320 }}>
+            <CircularProgress size={48} sx={{ color: '#3B82F6', mb: 3 }} />
+            <Typography variant="body1" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
+              {txProgress.message || 'Processing...'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              Step: {txProgress.step.toUpperCase()}
+            </Typography>
+
+            {txProgress.txHash && (
+              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#0B0C10', borderRadius: '6px' }}>
+                <Typography variant="caption" color="#60A5FA" sx={{ fontFamily: 'monospace' }}>
+                  Tx: {txProgress.txHash.slice(0, 16)}...
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+        </Dialog>
       </Container>
 
       <Footer />

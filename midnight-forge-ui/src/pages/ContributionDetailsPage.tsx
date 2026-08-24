@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,14 +13,24 @@ import {
   ListItemIcon,
   ListItemText,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  CircularProgress,
+  TextField,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { mockContributions } from '../data/mockContributions';
 import { StatusBadge, Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
+import { contractService, type TxProgress, type RewardReleaseResult } from '../services/contract/contractService';
+import { githubSyncService, type GitHubPRStatus } from '../../../api/src/services/githubSync';
 
 const lifecycleSteps = [
   { id: 'OPEN', label: 'Open' },
@@ -34,26 +44,79 @@ const lifecycleSteps = [
 export const ContributionDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isConnected, connect } = useWallet();
+  const { isConnected, account, connect } = useWallet();
 
-  const [claimedLocal, setClaimedLocal] = useState(false);
+  const [localStatus, setLocalStatus] = useState<
+    'OPEN' | 'CLAIMED' | 'PR_SUBMITTED' | 'MERGED' | 'ACCEPTED' | 'REWARDED'
+  >('OPEN');
+  const [prReferenceInput, setPrReferenceInput] = useState('');
+  const [txProgress, setTxProgress] = useState<TxProgress>({ step: 'idle' });
+  const [rewardResult, setRewardResult] = useState<RewardReleaseResult | null>(null);
+
   const contribution = mockContributions.find((c) => c.contributionId === id) || mockContributions[0];
 
-  const currentStatus = claimedLocal ? 'CLAIMED' : contribution.status;
-  const currentStepIndex = lifecycleSteps.findIndex((s) => s.id === currentStatus);
+  useEffect(() => {
+    setLocalStatus(contribution.status);
+  }, [contribution]);
 
-  const handleClaimClick = () => {
+  // Realtime / Near-realtime GitHub PR Status State
+  const [githubPrInfo, setGithubPrInfo] = useState<GitHubPRStatus>(() =>
+    githubSyncService.getPRStatus(contribution.contributionId),
+  );
+
+  const handleRefreshPRStatus = () => {
+    const updated = githubSyncService.getPRStatus(contribution.contributionId);
+    setGithubPrInfo(updated);
+  };
+
+  const currentStepIndex = lifecycleSteps.findIndex((s) => s.id === localStatus);
+
+  const handleClaimClick = async () => {
     if (!isConnected) {
       void connect();
-    } else {
-      setClaimedLocal(true);
+      return;
+    }
+
+    try {
+      await contractService.claimContribution(contribution.contributionId, (prog) => setTxProgress(prog));
+      setLocalStatus('CLAIMED');
+    } catch (err) {
+      setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'Claim failed' });
+    }
+  };
+
+  const handleSubmitPRReference = async () => {
+    if (!prReferenceInput.trim()) return;
+    try {
+      await contractService.submitContribution(contribution.contributionId, prReferenceInput, (prog) =>
+        setTxProgress(prog),
+      );
+      setLocalStatus('PR_SUBMITTED');
+    } catch (err) {
+      setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'PR submission failed' });
+    }
+  };
+
+  const handleReleaseReward = async () => {
+    try {
+      const recipient = account?.address || 'mn1a_contributor_preprod_89ef';
+      const result = await contractService.releaseReward(
+        contribution.contributionId,
+        contribution.rewardAmount,
+        recipient,
+        (prog) => setTxProgress(prog),
+      );
+      setRewardResult(result);
+      setLocalStatus('REWARDED');
+    } catch (err) {
+      setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'Reward release failed' });
     }
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
-        {/* Back Button */}
+        {/* Back Link */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate('/explore')}
@@ -93,7 +156,7 @@ export const ContributionDetailsPage: React.FC = () => {
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <StatusBadge status={currentStatus} size="medium" />
+              <StatusBadge status={localStatus} size="medium" />
               <Typography variant="h5" color="#10B981" sx={{ fontWeight: 800 }}>
                 {contribution.rewardAmount}
               </Typography>
@@ -103,7 +166,7 @@ export const ContributionDetailsPage: React.FC = () => {
           {/* Visual Lifecycle Progression Bar */}
           <Box sx={{ my: 4, pt: 2 }}>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block', mb: 2 }}>
-              CONTRIBUTION LIFECYCLE PROGRESS
+              MIDNIGHT CONTRACT LIFECYCLE PROGRESS
             </Typography>
 
             <Box
@@ -144,43 +207,150 @@ export const ContributionDetailsPage: React.FC = () => {
 
           <Divider sx={{ borderColor: '#1E2332', my: 3 }} />
 
-          {/* Primary Claim Action Button */}
+          {/* Primary Action Button Bar */}
           <Box
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}
           >
-            {claimedLocal ? (
-              <Alert
-                severity="success"
-                sx={{ borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}
-              >
-                You have successfully claimed this contribution! Work on GitHub and submit a PR to proceed.
-              </Alert>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                {isConnected
-                  ? 'Claim this task to mark it as in-progress under your wallet address.'
-                  : 'Connecting your 1AM wallet is required only when claiming this opportunity.'}
-              </Typography>
-            )}
-
-            {!claimedLocal && (
+            {localStatus === 'OPEN' && (
               <Button
                 variant="contained"
                 size="large"
-                onClick={handleClaimClick}
+                onClick={() => void handleClaimClick()}
                 startIcon={!isConnected ? <AccountBalanceWalletIcon /> : undefined}
                 sx={{ px: 4, py: 1.2, fontWeight: 700 }}
               >
                 {isConnected ? 'Claim Contribution' : 'Connect Wallet to Claim'}
               </Button>
             )}
+
+            {localStatus === 'CLAIMED' && (
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
+                <TextField
+                  placeholder="Enter GitHub Pull Request URL or #PR (e.g. https://github.com/org/repo/pull/19)"
+                  value={prReferenceInput}
+                  onChange={(e) => setPrReferenceInput(e.target.value)}
+                  size="small"
+                  sx={{ flexGrow: 1 }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={() => void handleSubmitPRReference()}
+                  sx={{ px: 3, fontWeight: 700 }}
+                >
+                  Submit PR Reference
+                </Button>
+              </Box>
+            )}
+
+            {localStatus === 'ACCEPTED' && (
+              <Button
+                variant="contained"
+                color="success"
+                size="large"
+                startIcon={<MonetizationOnIcon />}
+                onClick={() => void handleReleaseReward()}
+                sx={{ px: 4, py: 1.2, fontWeight: 800 }}
+              >
+                Authorize & Release Reward ({contribution.rewardAmount})
+              </Button>
+            )}
+
+            {rewardResult && (
+              <Alert
+                severity="success"
+                sx={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  color: '#10B981',
+                }}
+              >
+                Reward Released Successfully! Transaction Hash: <strong>{rewardResult.txHash}</strong>
+              </Alert>
+            )}
           </Box>
         </Paper>
 
-        {/* Task Details & Requirements */}
+        {/* Realtime GitHub PR Status Widget & Task Content */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {/* Description Card */}
+            {/* Realtime GitHub Status Box */}
+            <Paper
+              elevation={0}
+              sx={{ p: 3.5, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #262D3D' }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <GitHubIcon sx={{ color: '#94A3B8' }} />
+                  <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
+                    Realtime GitHub PR Tracker
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  startIcon={<RefreshIcon fontSize="small" />}
+                  onClick={handleRefreshPRStatus}
+                  sx={{ color: '#94A3B8' }}
+                >
+                  Sync Now
+                </Button>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                  gap: 2,
+                  p: 2,
+                  backgroundColor: '#0B0C10',
+                  borderRadius: '8px',
+                  mb: 2,
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Repository
+                  </Typography>
+                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                    {githubPrInfo.repoName}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    GitHub PR Status
+                  </Typography>
+                  <Chip
+                    label={githubPrInfo.githubState}
+                    size="small"
+                    sx={{
+                      fontWeight: 700,
+                      backgroundColor: githubPrInfo.isMerged ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                      color: githubPrInfo.isMerged ? '#10B981' : '#60A5FA',
+                    }}
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Pull Request Link
+                  </Typography>
+                  <Button
+                    size="small"
+                    endIcon={<OpenInNewIcon fontSize="small" />}
+                    href={githubPrInfo.htmlUrl}
+                    target="_blank"
+                    sx={{ p: 0, color: '#60A5FA' }}
+                  >
+                    PR #{githubPrInfo.prNumber}
+                  </Button>
+                </Box>
+              </Box>
+
+              <Typography variant="caption" color="text.secondary">
+                Last synchronized via GitHub API & Webhooks: {new Date(githubPrInfo.lastSyncedAt).toLocaleTimeString()}
+              </Typography>
+            </Paper>
+
+            {/* Task Description */}
             <Paper
               elevation={0}
               sx={{ p: 4, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -212,7 +382,7 @@ export const ContributionDetailsPage: React.FC = () => {
             </Paper>
           </Box>
 
-          {/* Right Sidebar: Details & Links */}
+          {/* Right Sidebar */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Paper
               elevation={0}
@@ -236,7 +406,7 @@ export const ContributionDetailsPage: React.FC = () => {
 
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Reward Pool
+                    Predefined Reward
                   </Typography>
                   <Typography variant="subtitle2" color="#10B981" sx={{ fontWeight: 700 }}>
                     {contribution.rewardAmount}
@@ -260,6 +430,25 @@ export const ContributionDetailsPage: React.FC = () => {
             </Paper>
           </Box>
         </Box>
+
+        {/* Transaction Progress Dialog */}
+        <Dialog open={txProgress.step !== 'idle' && txProgress.step !== 'confirmed' && txProgress.step !== 'failed'}>
+          <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Executing Midnight Transaction</DialogTitle>
+          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320 }}>
+            <CircularProgress size={48} sx={{ color: '#3B82F6', mb: 3 }} />
+            <Typography variant="body1" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
+              {txProgress.message || 'Processing...'}
+            </Typography>
+
+            {txProgress.txHash && (
+              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#0B0C10', borderRadius: '6px' }}>
+                <Typography variant="caption" color="#60A5FA" sx={{ fontFamily: 'monospace' }}>
+                  Tx: {txProgress.txHash.slice(0, 16)}...
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+        </Dialog>
       </Container>
 
       <Footer />

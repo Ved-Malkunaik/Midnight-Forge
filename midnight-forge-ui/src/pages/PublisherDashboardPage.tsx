@@ -5,13 +5,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { mockProjects } from '../data/mockProjects';
+import { useProjects } from '../contexts';
 import { Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
 
 export const PublisherDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, connect } = useWallet();
+  const { projects } = useProjects();
 
   const handlePublishClick = () => {
     if (!isConnected) {
@@ -68,7 +69,7 @@ export const PublisherDashboardPage: React.FC = () => {
 
         {/* Overview Stats */}
         <Grid container spacing={3} sx={{ mb: 5 }}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -77,12 +78,12 @@ export const PublisherDashboardPage: React.FC = () => {
                 Projects Owned
               </Typography>
               <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mt: 1 }}>
-                {mockProjects.length}
+                {projects.length}
               </Typography>
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -96,7 +97,7 @@ export const PublisherDashboardPage: React.FC = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
               sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
@@ -118,7 +119,7 @@ export const PublisherDashboardPage: React.FC = () => {
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {mockProjects.map((project) => (
+            {projects.map((project) => (
               <Paper
                 key={project.projectId}
                 elevation={0}
