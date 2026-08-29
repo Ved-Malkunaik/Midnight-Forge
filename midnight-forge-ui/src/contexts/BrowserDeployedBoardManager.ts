@@ -53,7 +53,8 @@ import { MidnightForgePrivateState as BBoardPrivateState } from '../../../contra
 import { inMemoryPrivateStateProvider } from '../in-memory-private-state-provider';
 import { NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import type { UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
-import { getContractAddress } from '../config';
+import { getContractAddress, getNetworkId } from '../config';
+import { contractService, type TxProgress } from '../services/contract/contractService';
 
 /**
  * An in-progress bulletin board deployment.
@@ -106,11 +107,7 @@ export interface DeployedBoardAPIProvider {
   readonly boardDeployments$: Observable<Array<Observable<BoardDeployment>>>;
   registerProject(
     params: Parameters<DeployedBBoardAPI['registerProject']>[0],
-    onProgress?: (progress: {
-      step: 'approving' | 'submitting' | 'confirming';
-      message?: string;
-      txHash?: string;
-    }) => void,
+    onProgress?: (progress: TxProgress) => void,
   ): Promise<string>;
 
   /**
@@ -152,22 +149,50 @@ export class BrowserDeployedBoardManager implements DeployedBoardAPIProvider {
 
   async registerProject(
     params: Parameters<DeployedBBoardAPI['registerProject']>[0],
-    onProgress?: (progress: {
-      step: 'approving' | 'submitting' | 'confirming';
-      message?: string;
-      txHash?: string;
-    }) => void,
+    onProgress?: (progress: TxProgress) => void,
   ): Promise<string> {
+    const contractAddress = getContractAddress();
+    if (!contractAddress) {
+      const error = new Error('No deployed Midnight Forge Preprod contract is configured. Set VITE_MIDNIGHT_FORGE_CONTRACT_ADDRESS.');
+      onProgress?.({ step: 'failed', error: error.message, message: error.message });
+      throw error;
+    }
+
     onProgress?.({ step: 'approving', message: 'Requesting 1AM wallet confirmation...' });
-    const deployment = await firstValueFrom(
-      this.resolve(getContractAddress()).pipe(
-        filter((item): item is DeployedBoardDeployment => item.status === 'deployed'),
-      ),
-    );
-    onProgress?.({ step: 'submitting', message: 'Submitting registerProject transaction to Midnight Preprod...' });
-    const txHash = await deployment.api.registerProject(params);
-    onProgress?.({ step: 'confirming', txHash, message: 'Awaiting block confirmation on Midnight Network...' });
-    return txHash;
+    try {
+      const deployment = await firstValueFrom(
+        this.resolve(contractAddress).pipe(
+          filter((item): item is DeployedBoardDeployment | FailedBoardDeployment =>
+            item.status === 'deployed' || item.status === 'failed',
+          ),
+          map((item) => {
+            if (item.status === 'failed') {
+              throw item.error;
+            }
+            return item;
+          }),
+          timeout({
+            first: 180_000,
+            with: () =>
+              throwError(
+                () =>
+                  new Error(
+                    `Timed out initializing the Midnight contract client for ${getContractAddress()} on ${getNetworkId()}. Check the wallet network and indexer configuration.`,
+                  ),
+              ),
+          }),
+        ),
+      );
+      onProgress?.({ step: 'submitting', message: 'Submitting registerProject transaction to Midnight Preprod...' });
+      const txHash = await deployment.api.registerProject(params);
+      onProgress?.({ step: 'confirming', txHash, message: 'Awaiting block confirmation on Midnight Network...' });
+      return txHash;
+    } catch (err: unknown) {
+      this.logger.error({ err }, 'Midnight contract execution failed');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      onProgress?.({ step: 'failed', error: errorMessage, message: errorMessage });
+      throw err;
+    }
   }
 
   /** @inheritdoc */
@@ -210,7 +235,11 @@ export class BrowserDeployedBoardManager implements DeployedBoardAPIProvider {
   private async deployDeployment(deployment: BehaviorSubject<BoardDeployment>): Promise<void> {
     try {
       const providers = await this.getProviders();
+      this.logger.info('Deploying Midnight Forge contract on Midnight Network via 1AM wallet...');
       const api = await BBoardAPI.deploy(providers, this.logger);
+      if (typeof window !== 'undefined' && api.deployedContractAddress) {
+        localStorage.setItem('midnight_forge_deployed_contract_address', api.deployedContractAddress);
+      }
 
       deployment.next({
         status: 'deployed',
@@ -230,17 +259,54 @@ export class BrowserDeployedBoardManager implements DeployedBoardAPIProvider {
   ): Promise<void> {
     try {
       const providers = await this.getProviders();
+      const contractState = await providers.publicDataProvider.queryContractState(contractAddress);
+      
+      if (!contractState) {
+        this.logger.info(
+          { contractAddress },
+          'No existing contract state found on network indexer for this address. Deploying contract on Preprod via 1AM wallet...',
+        );
+        const api = await BBoardAPI.deploy(providers, this.logger);
+        if (typeof window !== 'undefined' && api.deployedContractAddress) {
+          localStorage.setItem('midnight_forge_deployed_contract_address', api.deployedContractAddress);
+        }
+        deployment.next({
+          status: 'deployed',
+          api,
+        });
+        return;
+      }
+
       const api = await BBoardAPI.join(providers, contractAddress, this.logger);
+      if (typeof window !== 'undefined' && api.deployedContractAddress) {
+        localStorage.setItem('midnight_forge_deployed_contract_address', api.deployedContractAddress);
+      }
 
       deployment.next({
         status: 'deployed',
         api,
       });
     } catch (error: unknown) {
-      deployment.next({
-        status: 'failed',
-        error: error instanceof Error ? error : new Error(String(error)),
-      });
+      const joinError = error instanceof Error ? error : new Error(String(error));
+      this.logger.warn({ err: joinError, contractAddress }, 'Failed to join configured contract. Deploying contract via 1AM wallet...');
+      try {
+        const providers = await this.getProviders();
+        const api = await BBoardAPI.deploy(providers, this.logger);
+        if (typeof window !== 'undefined' && api.deployedContractAddress) {
+          localStorage.setItem('midnight_forge_deployed_contract_address', api.deployedContractAddress);
+        }
+        deployment.next({
+          status: 'deployed',
+          api,
+        });
+      } catch (deployError: unknown) {
+        const finalError = deployError instanceof Error ? deployError : new Error(String(deployError));
+        this.logger.error({ err: finalError }, 'Failed to deploy Midnight Forge contract via 1AM wallet');
+        deployment.next({
+          status: 'failed',
+          error: finalError,
+        });
+      }
     }
   }
 }
@@ -252,13 +318,40 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
   const zkConfigPath = window.location.origin; // '../../../contract/src/managed/bboard';
   const keyMaterialProvider = new FetchZkConfigProvider<BBoardCircuitKeys>(zkConfigPath, fetch.bind(window));
   const config = await connectedAPI.getConfiguration();
+  const expectedNetworkId = networkId.toLowerCase();
+  const effectiveIndexerUri = config.indexerUri;
+  const effectiveIndexerWsUri = config.indexerWsUri;
+  const effectiveProverServerUri = config.proverServerUri;
+  const indexerMatchesNetwork = [effectiveIndexerUri, effectiveIndexerWsUri]
+    .filter((uri): uri is string => !!uri)
+    .every((uri) => uri.toLowerCase().includes(expectedNetworkId));
+
+  if (import.meta.env.DEV) {
+    logger.info(
+      {
+        networkId,
+        indexerUri: effectiveIndexerUri,
+        indexerWsUri: effectiveIndexerWsUri,
+        proverServerUri: effectiveProverServerUri,
+        contractAddress: getContractAddress(),
+      },
+      'Effective Midnight transaction configuration',
+    );
+  }
+
+  if (!indexerMatchesNetwork) {
+    throw new Error(
+      `Wallet indexer configuration does not match ${networkId}: indexer=${effectiveIndexerUri}, websocket=${effectiveIndexerWsUri}`,
+    );
+  }
+
   const inMemoryBBoardPrivateStateProvider = inMemoryPrivateStateProvider<string, BBoardPrivateState>();
   const shieldedAddresses = await connectedAPI.getShieldedAddresses();
   return {
     privateStateProvider: inMemoryBBoardPrivateStateProvider,
     zkConfigProvider: keyMaterialProvider,
-    proofProvider: httpClientProofProvider(config.proverServerUri!, keyMaterialProvider),
-    publicDataProvider: indexerPublicDataProvider(config.indexerUri, config.indexerWsUri),
+    proofProvider: httpClientProofProvider(effectiveProverServerUri!, keyMaterialProvider),
+    publicDataProvider: indexerPublicDataProvider(effectiveIndexerUri, effectiveIndexerWsUri),
     walletProvider: {
       getCoinPublicKey(): string {
         return shieldedAddresses.shieldedCoinPublicKey;
@@ -285,10 +378,11 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
     },
     midnightProvider: {
       submitTx: async (tx: FinalizedTransaction): Promise<TransactionId> => {
-        await connectedAPI.submitTransaction(toHex(tx.serialize()));
+        const submittedTxId: unknown = await connectedAPI.submitTransaction(toHex(tx.serialize()));
         const txIdentifiers = tx.identifiers();
-        const txId = txIdentifiers[0]; // Return the first transaction ID
-        logger.info({ txIdentifiers }, 'Submitted transaction via wallet');
+        const rawId = String(submittedTxId ?? '').trim();
+        const txId = (rawId.length > 0 ? rawId : txIdentifiers[0]) as TransactionId;
+        logger.info({ txIdentifiers, submittedTxId, txId }, 'Submitted transaction via 1AM wallet');
         return txId;
       },
     },
@@ -296,18 +390,41 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
 };
 
 /** @internal */
-const getFirstCompatibleWallet = (): InitialAPI | undefined => {
-  if (!window.midnight) return undefined;
-  return Object.values(window.midnight).find(
-    (wallet): wallet is InitialAPI =>
-      !!wallet &&
-      typeof wallet === 'object' &&
-      'apiVersion' in wallet &&
-      semver.satisfies(wallet.apiVersion, COMPATIBLE_CONNECTOR_API_VERSION),
-  );
+const isValidInitialAPI = (api: unknown): api is InitialAPI => {
+  return !!api && typeof api === 'object' && 'connect' in api && typeof (api as InitialAPI).connect === 'function';
 };
 
-const COMPATIBLE_CONNECTOR_API_VERSION = '4.x';
+/** @internal */
+const getFirstCompatibleWallet = (): InitialAPI | undefined => {
+  if (typeof window === 'undefined' || !window.midnight) return undefined;
+  const entries = Object.entries(window.midnight);
+
+  for (const [key, wallet] of entries) {
+    if (isValidInitialAPI(wallet)) {
+      const normalizedKey = key.toLowerCase();
+      const normalizedName = ((wallet as InitialAPI).name || '').toLowerCase();
+      const normalizedRdns = ((wallet as InitialAPI).rdns || '').toLowerCase();
+      if (
+        normalizedKey.includes('1am') ||
+        normalizedKey.includes('oneam') ||
+        normalizedName.includes('1am') ||
+        normalizedName.includes('one am') ||
+        normalizedRdns.includes('1am') ||
+        normalizedRdns.includes('oneam')
+      ) {
+        return wallet as InitialAPI;
+      }
+    }
+  }
+
+  for (const [, wallet] of entries) {
+    if (isValidInitialAPI(wallet)) {
+      return wallet as InitialAPI;
+    }
+  }
+
+  return undefined;
+};
 
 /** @internal */
 const connectToWallet = (logger: Logger, networkId: string): Promise<ConnectedAPI> => {
@@ -324,12 +441,12 @@ const connectToWallet = (logger: Logger, networkId: string): Promise<ConnectedAP
       }),
       take(1),
       timeout({
-        first: 1_000,
+        first: 2_000,
         with: () =>
           throwError(() => {
             logger.error('Could not find wallet connector API');
 
-            return new Error('Could not find Midnight Lace wallet. Extension installed?');
+            return new Error('Could not find 1AM wallet. Extension installed?');
           }),
       }),
       concatMap(async (initialAPI) => {
@@ -339,19 +456,19 @@ const connectToWallet = (logger: Logger, networkId: string): Promise<ConnectedAP
         return connectedAPI;
       }),
       timeout({
-        first: 5_000,
+        first: 10_000,
         with: () =>
           throwError(() => {
             logger.error('Wallet connector API has failed to respond');
 
-            return new Error('Midnight Lace wallet has failed to respond. Extension enabled?');
+            return new Error('1AM wallet extension has failed to respond.');
           }),
       }),
       catchError((error, apis) =>
         error
           ? throwError(() => {
-              logger.error('Unable to enable connector API' + error);
-              return new Error('Application is not authorized');
+              logger.error('Unable to enable connector API ' + String(error));
+              return new Error('Application is not authorized or 1AM wallet error');
             })
           : apis,
       ),

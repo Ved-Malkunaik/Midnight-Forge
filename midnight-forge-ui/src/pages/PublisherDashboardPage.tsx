@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useProjects } from '../contexts';
-import { Footer } from '../components';
+import { Footer, EmptyState } from '../components';
 import { useWallet } from '../hooks/useWallet';
 
 export const PublisherDashboardPage: React.FC = () => {
@@ -92,7 +92,7 @@ export const PublisherDashboardPage: React.FC = () => {
                 Total Active Tasks
               </Typography>
               <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mt: 1 }}>
-                20
+                {projects.reduce((acc, p) => acc + (p.openTaskCount || 0), 0)}
               </Typography>
             </Paper>
           </Grid>
@@ -106,7 +106,7 @@ export const PublisherDashboardPage: React.FC = () => {
                 Total Disbursed Rewards
               </Typography>
               <Typography variant="h4" color="#10B981" sx={{ fontWeight: 800, mt: 1 }}>
-                107,500 tNIGHT
+                0 tNIGHT
               </Typography>
             </Paper>
           </Grid>
@@ -118,104 +118,105 @@ export const PublisherDashboardPage: React.FC = () => {
             Your Published Repositories
           </Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {projects.map((project) => (
-              <Paper
-                key={project.projectId}
-                elevation={0}
-                sx={{
-                  p: 4,
-                  borderRadius: '12px',
-                  backgroundColor: '#131620',
-                  border: '1px solid #1E2332',
-                }}
-              >
-                <Box
+          {projects.length > 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {projects.map((project) => (
+                <Paper
+                  key={project.projectId}
+                  elevation={0}
                   sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    mb: 2,
+                    p: 4,
+                    borderRadius: '12px',
+                    backgroundColor: '#131620',
+                    border: '1px solid #1E2332',
                   }}
                 >
-                  <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <GitHubIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
-                      <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                        {project.githubRepository.replace('https://github.com/', '')}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <GitHubIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                          {project.githubRepository.replace('https://github.com/', '')}
+                        </Typography>
+                      </Box>
+                      <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800 }}>
+                        {project.name}
                       </Typography>
                     </Box>
-                    <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800 }}>
-                      {project.name}
-                    </Typography>
+
+                    <Box sx={{ display: 'flex', gap: 1.5 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<SettingsIcon fontSize="small" />}
+                        onClick={() => navigate(`/projects/${project.projectId}/manage`)}
+                        sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}
+                      >
+                        Manage Project
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<AddIcon fontSize="small" />}
+                        onClick={() => navigate(`/projects/${project.projectId}/manage`)}
+                      >
+                        Add Opportunity
+                      </Button>
+                    </Box>
                   </Box>
 
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<SettingsIcon fontSize="small" />}
-                      onClick={() => navigate(`/projects/${project.projectId}/manage`)}
-                      sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}
-                    >
-                      Manage Project
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<AddIcon fontSize="small" />}
-                      onClick={() => navigate(`/projects/${project.projectId}/manage`)}
-                    >
-                      Add Opportunity
-                    </Button>
-                  </Box>
-                </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    {project.shortDescription}
+                  </Typography>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  {project.shortDescription}
-                </Typography>
-
-                <Box sx={{ display: 'flex', gap: 4, pt: 2, borderTop: '1px solid #1E2332', flexWrap: 'wrap' }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Open Opportunities
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
-                      {project.openTaskCount}
-                    </Typography>
+                  <Box sx={{ display: 'flex', gap: 4, pt: 2, borderTop: '1px solid #1E2332', flexWrap: 'wrap' }}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        Open Tasks
+                      </Typography>
+                      <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+                        {project.openTaskCount}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        Reward Pool
+                      </Typography>
+                      <Typography variant="subtitle1" color="#10B981" sx={{ fontWeight: 700 }}>
+                        {project.rewardPool}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        Status
+                      </Typography>
+                      <Chip
+                        label={project.status}
+                        size="small"
+                        sx={{ mt: 0.5, fontWeight: 700, backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}
+                      />
+                    </Box>
                   </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Completed Contributions
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
-                      {project.completedTaskCount}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Reward Pool
-                    </Typography>
-                    <Typography variant="subtitle1" color="#10B981" sx={{ fontWeight: 700 }}>
-                      {project.rewardPool}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Status
-                    </Typography>
-                    <Chip
-                      label={project.status}
-                      size="small"
-                      sx={{ mt: 0.5, fontWeight: 700, backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}
-                    />
-                  </Box>
-                </Box>
-              </Paper>
-            ))}
-          </Box>
+                </Paper>
+              ))}
+            </Box>
+          ) : (
+            <EmptyState
+              title="No Published Repositories Yet"
+              description="You haven't registered any repositories on Midnight Network. Publish your first project to start creating contribution opportunities."
+              actionLabel="Publish New Project"
+              onAction={handlePublishClick}
+            />
+          )}
         </Box>
       </Container>
 

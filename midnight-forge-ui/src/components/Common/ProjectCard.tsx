@@ -4,6 +4,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import type { Project } from '../../types/marketplace';
+import { shortenAddress } from '../../utils/address';
 
 interface ProjectCardProps {
   project: Project;
@@ -65,9 +66,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </Box>
 
       {/* Project Title */}
-      <Typography variant="h6" color="text.primary" sx={{ mb: 1, fontWeight: 700, lineHeight: 1.3 }}>
+      <Typography variant="h6" color="text.primary" sx={{ mb: 0.5, fontWeight: 700, lineHeight: 1.3 }}>
         {project.name}
       </Typography>
+
+      {/* Owner Wallet Address */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+          Owner:
+        </Typography>
+
+        <Typography
+          variant="caption"
+          color="#60A5FA"
+          sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.75rem' }}
+        >
+          {project.owner ? shortenAddress(project.owner) : 'Connected 1AM Wallet'}
+        </Typography>
+      </Box>
 
       {/* Short Description */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, flexGrow: 1, lineHeight: 1.6 }}>
@@ -114,7 +130,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         <Button
           variant="outlined"
           size="small"
-          onClick={() => navigate(`/projects/${project.projectId}`)}
+          onClick={() => {
+            const rawUrl = project.deploymentUrl || project.githubRepository;
+            if (rawUrl) {
+              const formattedUrl = /^https?:\/\//i.test(rawUrl.trim()) ? rawUrl.trim() : `https://${rawUrl.trim()}`;
+              window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+            } else {
+              navigate(`/projects/${project.projectId}`);
+            }
+          }}
           endIcon={<ArrowForwardIcon fontSize="small" />}
           sx={{
             borderColor: '#262D3D',

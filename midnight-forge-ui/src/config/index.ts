@@ -18,7 +18,25 @@ export const config: AppConfig = {
     'https://docs.google.com/forms/d/e/1FAIpQLSc_midnight_forge_feedback/viewform',
 };
 
-export const getContractAddress = (): string => config.contractAddress;
+export const normalizeContractAddress = (rawAddr: string): string => {
+  if (!rawAddr) return '';
+  let addr = rawAddr.trim();
+  if (addr.startsWith('0x') || addr.startsWith('0X')) {
+    addr = addr.slice(2);
+  }
+  if (addr.length === 68 && addr.startsWith('0200')) {
+    addr = addr.slice(4);
+  }
+  return addr;
+};
+
+export const getContractAddress = (): string => {
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('midnight_forge_deployed_contract_address') : null;
+  if (stored && stored.trim()) {
+    return normalizeContractAddress(stored);
+  }
+  return normalizeContractAddress(config.contractAddress);
+};
 export const getNetworkId = (): string => config.networkId;
 export const getApiBaseUrl = (): string => config.apiBaseUrl;
 export const getGoogleFormUrl = (): string => config.googleFormUrl;

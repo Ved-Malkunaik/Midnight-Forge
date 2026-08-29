@@ -1,49 +1,17 @@
 import React from 'react';
-import { Box, Container, Typography, Paper, Chip, Button } from '@mui/material';
-import GitHubIcon from '@mui/icons-material/GitHub';
+import { useNavigate } from 'react-router-dom';
+import { Box, Container, Typography, Button } from '@mui/material';
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
-
-interface PlaceholderProject {
-  id: string;
-  name: string;
-  repo: string;
-  description: string;
-  openTasks: number;
-  rewardPool: string;
-  tags: string[];
-}
-
-const mockProjects: PlaceholderProject[] = [
-  {
-    id: '1',
-    name: 'Midnight Core Node Engine',
-    repo: 'midnight-ntwrk/node-engine',
-    description: 'High-performance zero-knowledge state synchronization and block validation engine.',
-    openTasks: 4,
-    rewardPool: '12,500 tNIGHT',
-    tags: ['Rust', 'ZK-Proofs', 'Ledger'],
-  },
-  {
-    id: '2',
-    name: 'Compact Compiler Toolchain',
-    repo: 'midnight-ntwrk/compact-cli',
-    description: 'Developer CLI and optimization tools for compiling Compact smart contracts.',
-    openTasks: 7,
-    rewardPool: '8,000 tNIGHT',
-    tags: ['TypeScript', 'Compiler', 'CLI'],
-  },
-  {
-    id: '3',
-    name: 'Midnight Shielded Wallet SDK',
-    repo: 'midnight-ntwrk/wallet-sdk',
-    description: 'Browser & mobile client SDK for managing shielded balances and transaction proofs.',
-    openTasks: 3,
-    rewardPool: '15,000 tNIGHT',
-    tags: ['TypeScript', 'Cryptography', 'SDK'],
-  },
-];
+import AddIcon from '@mui/icons-material/Add';
+import { useProjects } from '../../contexts';
+import { ProjectCard } from '../Common/ProjectCard';
+import { EmptyState } from '../Common/EmptyState';
 
 export const FeaturedProjects: React.FC = () => {
+  const navigate = useNavigate();
+  const { projects } = useProjects();
+  const featured = projects.slice(0, 3);
+
   return (
     <Box id="explore" sx={{ py: { xs: 8, md: 10 } }}>
       <Container maxWidth="lg">
@@ -57,101 +25,32 @@ export const FeaturedProjects: React.FC = () => {
             </Typography>
           </Box>
 
-          <Button
-            variant="text"
-            endIcon={<ArrowOutwardIcon fontSize="small" />}
-            sx={{ color: '#94A3B8', '&:hover': { color: '#F8FAFC' } }}
-          >
-            View All
-          </Button>
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-          {mockProjects.map((project) => (
-            <Paper
-              key={project.id}
-              elevation={0}
-              sx={{
-                p: 3,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '12px',
-                backgroundColor: '#131620',
-                border: '1px solid #1E2332',
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  borderColor: '#3B82F6',
-                  transform: 'translateY(-2px)',
-                },
-              }}
+          {projects.length > 0 && (
+            <Button
+              variant="text"
+              onClick={() => navigate('/explore')}
+              endIcon={<ArrowOutwardIcon fontSize="small" />}
+              sx={{ color: '#94A3B8', '&:hover': { color: '#F8FAFC' } }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <GitHubIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                  {project.repo}
-                </Typography>
-              </Box>
-
-              <Typography variant="h6" color="text.primary" sx={{ mb: 1, fontWeight: 700 }}>
-                {project.name}
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3, flexGrow: 1, lineHeight: 1.5 }}>
-                {project.description}
-              </Typography>
-
-              <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap', mb: 3 }}>
-                {project.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    size="small"
-                    sx={{
-                      height: 22,
-                      fontSize: '0.675rem',
-                      fontWeight: 600,
-                      backgroundColor: '#1E2332',
-                      color: '#94A3B8',
-                    }}
-                  />
-                ))}
-              </Box>
-
-              <Box
-                sx={{
-                  pt: 2,
-                  borderTop: '1px solid #1E2332',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'space-between',
-                }}
-              >
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Reward Pool
-                  </Typography>
-                  <Typography variant="subtitle2" color="#10B981" sx={{ fontWeight: 700 }}>
-                    {project.rewardPool}
-                  </Typography>
-                </Box>
-
-                <Chip
-                  label={`${project.openTasks} open tasks`}
-                  size="small"
-                  sx={{
-                    height: 24,
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    color: '#60A5FA',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                  }}
-                />
-              </Box>
-            </Paper>
-          ))}
+              View All
+            </Button>
+          )}
         </Box>
+
+        {featured.length > 0 ? (
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+            {featured.map((project) => (
+              <ProjectCard key={project.projectId} project={project} />
+            ))}
+          </Box>
+        ) : (
+          <EmptyState
+            title="No Published Repositories Yet"
+            description="Be the first developer to publish an open-source project on Midnight Network using 1AM Wallet."
+            actionLabel="Publish a Project"
+            onAction={() => navigate('/publish')}
+          />
+        )}
       </Container>
     </Box>
   );

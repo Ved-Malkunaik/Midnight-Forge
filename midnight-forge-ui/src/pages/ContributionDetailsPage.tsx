@@ -31,6 +31,7 @@ import { StatusBadge, Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
 import { contractService, type TxProgress, type RewardReleaseResult } from '../services/contract/contractService';
 import { githubSyncService, type GitHubPRStatus } from '../../../api/src/services/githubSync';
+import { getOneAmExplorerTxUrl, getMidnightExplorerTxUrl } from '../utils/explorer';
 
 const lifecycleSteps = [
   { id: 'OPEN', label: 'Open' },
@@ -256,17 +257,46 @@ export const ContributionDetailsPage: React.FC = () => {
             )}
 
             {rewardResult && (
-              <Alert
-                severity="success"
+              <Box
                 sx={{
                   width: '100%',
-                  borderRadius: '8px',
+                  p: 2.5,
+                  borderRadius: '12px',
                   backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  color: '#10B981',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
                 }}
               >
-                Reward Released Successfully! Transaction Hash: <strong>{rewardResult.txHash}</strong>
-              </Alert>
+                <Typography variant="body1" color="#10B981" sx={{ fontWeight: 700, mb: 1 }}>
+                  Reward Released Successfully!
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2 }}>
+                  Tx Reference: {rewardResult.txHash}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<OpenInNewIcon fontSize="small" />}
+                    href={getOneAmExplorerTxUrl(rewardResult.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60A5FA', '&:hover': { borderColor: '#3B82F6' } }}
+                  >
+                    Track on 1AM Explorer
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<OpenInNewIcon fontSize="small" />}
+                    href={getMidnightExplorerTxUrl(rewardResult.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10B981', '&:hover': { borderColor: '#10B981' } }}
+                  >
+                    Track on Midnight Explorer (Preprod)
+                  </Button>
+                </Box>
+              </Box>
             )}
           </Box>
         </Paper>

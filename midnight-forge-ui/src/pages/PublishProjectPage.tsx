@@ -19,18 +19,21 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PublishIcon from '@mui/icons-material/Publish';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Footer } from '../components';
 import { useWallet } from '../hooks/useWallet';
 import { useDeployedBoardContext } from '../hooks/useDeployedBoardContext';
 import { useProjects } from '../contexts';
 import type { Project } from '../types/marketplace';
 import type { TxProgress } from '../services/contract/contractService';
+import { shortenAddress } from '../utils/address';
+import { getOneAmExplorerTxUrl, getMidnightExplorerTxUrl } from '../utils/explorer';
 
 const categories = ['DApps', 'Core Protocol', 'Tooling & CLI', 'SDK & Libraries', 'Infrastructure'];
 
 export const PublishProjectPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, account } = useWallet();
   const { addProject } = useProjects();
 
   const [name, setName] = useState('');
@@ -85,6 +88,15 @@ export const PublishProjectPage: React.FC = () => {
       }
     }
 
+    if (!isConnected) {
+      try {
+        await connect();
+      } catch (err: unknown) {
+        setErrorMsg(err instanceof Error ? err.message : '1AM Wallet connection failed.');
+        return;
+      }
+    }
+
     setErrorMsg('');
     setTxProgress({ step: 'approving', message: 'Requesting 1AM wallet confirmation...' });
     try {
@@ -101,8 +113,8 @@ export const PublishProjectPage: React.FC = () => {
 
       const publishedProject: Project = {
         projectId: `project-${Date.now()}`,
-        owner: 'Connected 1AM Wallet',
-        publisherName: 'Connected Publisher',
+        owner: account?.address || 'Connected 1AM Wallet',
+        publisherName: account?.address ? `Publisher (${shortenAddress(account.address)})` : 'Connected Publisher',
         name: name.trim(),
         shortDescription: shortDesc.trim(),
         fullDescription: fullDesc.trim() || shortDesc.trim(),
@@ -120,8 +132,9 @@ export const PublishProjectPage: React.FC = () => {
       addProject(publishedProject);
       setTxProgress({ step: 'confirmed', txHash, message: 'Project registered successfully on-chain!' });
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Transaction failed.');
-      setTxProgress({ step: 'idle' });
+      const msg = err instanceof Error ? err.message : 'Transaction failed on Midnight Network.';
+      setErrorMsg(`Transaction failed: ${msg}. The project was not published.`);
+      setTxProgress({ step: 'failed', error: msg, message: msg });
     }
   };
 
@@ -185,13 +198,37 @@ export const PublishProjectPage: React.FC = () => {
             </Typography>
 
             {txProgress.txHash && (
-              <Box sx={{ mb: 4, p: 2, backgroundColor: '#0B0C10', borderRadius: '8px', border: '1px solid #1E2332' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                  Midnight Transaction Reference:
+              <Box sx={{ mb: 4, p: 3, backgroundColor: '#0B0C10', borderRadius: '12px', border: '1px solid #1E2332' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 700 }}>
+                  MIDNIGHT TRANSACTION REFERENCE
                 </Typography>
-                <Typography variant="body2" color="#60A5FA" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                <Typography variant="body2" color="#60A5FA" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2 }}>
                   {txProgress.txHash}
                 </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap', mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<OpenInNewIcon fontSize="small" />}
+                    href={getOneAmExplorerTxUrl(txProgress.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60A5FA', '&:hover': { borderColor: '#3B82F6' } }}
+                  >
+                    Track on 1AM Explorer
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<OpenInNewIcon fontSize="small" />}
+                    href={getMidnightExplorerTxUrl(txProgress.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10B981', '&:hover': { borderColor: '#10B981' } }}
+                  >
+                    Track on Midnight Explorer (Preprod)
+                  </Button>
+                </Box>
               </Box>
             )}
 
@@ -211,6 +248,7 @@ export const PublishProjectPage: React.FC = () => {
         ) : (
           <Paper
             component="form"
+            noValidate
             onSubmit={(e) => void handleSubmit(e)}
             elevation={0}
             sx={{

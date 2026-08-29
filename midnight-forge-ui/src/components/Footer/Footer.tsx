@@ -65,29 +65,41 @@ export const Footer: React.FC = () => {
           {/* Column 3: Resources */}
           <Grid size={{ xs: 6, sm: 3, md: 3 }}>
             <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
-              Resources & Feedback
+              Explorers & Resources
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+              <Link
+                href="https://explorer.1am.xyz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                underline="hover"
+                sx={{ fontSize: '0.875rem', color: '#60A5FA' }}
+              >
+                1AM Block Explorer
+              </Link>
+              <Link
+                href="https://explorer.preprod.midnight.network/"
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                underline="hover"
+                sx={{ fontSize: '0.875rem', color: '#10B981' }}
+              >
+                Midnight Explorer (Preprod)
+              </Link>
               <Link href="/feedback" color="inherit" underline="hover" sx={{ fontSize: '0.875rem' }}>
                 Provide Feedback
               </Link>
               <Link
                 href="https://midnight.network"
                 target="_blank"
+                rel="noopener noreferrer"
                 color="inherit"
                 underline="hover"
                 sx={{ fontSize: '0.875rem' }}
               >
                 Midnight Network Docs
-              </Link>
-              <Link
-                href="https://github.com/midnight-ntwrk"
-                target="_blank"
-                color="inherit"
-                underline="hover"
-                sx={{ fontSize: '0.875rem' }}
-              >
-                Compact Smart Contracts
               </Link>
             </Box>
           </Grid>

@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { type PropsWithChildren, createContext } from 'react';
+import React, { type PropsWithChildren, createContext, useState } from 'react';
 import { type DeployedBoardAPIProvider, BrowserDeployedBoardManager } from './BrowserDeployedBoardManager';
 import { type Logger } from 'pino';
 
@@ -34,8 +34,8 @@ export type DeployedBoardProviderProps = PropsWithChildren<{
  * A React component that sets a new {@link BrowserDeployedBoardManager} object as the currently
  * in-scope deployed board provider.
  */
-export const DeployedBoardProvider: React.FC<Readonly<DeployedBoardProviderProps>> = ({ logger, children }) => (
-  <DeployedBoardContext.Provider value={new BrowserDeployedBoardManager(logger)}>
-    {children}
-  </DeployedBoardContext.Provider>
-);
+export const DeployedBoardProvider: React.FC<Readonly<DeployedBoardProviderProps>> = ({ logger, children }) => {
+  const [manager] = useState(() => new BrowserDeployedBoardManager(logger));
+
+  return <DeployedBoardContext.Provider value={manager}>{children}</DeployedBoardContext.Provider>;
+};

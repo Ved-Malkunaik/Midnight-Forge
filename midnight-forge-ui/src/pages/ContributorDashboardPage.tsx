@@ -5,13 +5,16 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import { StatusBadge, Footer } from '../components';
+import CodeIcon from '@mui/icons-material/Code';
+import { StatusBadge, Footer, ProjectCard, EmptyState } from '../components';
 import { useWallet } from '../hooks/useWallet';
+import { useProjects } from '../contexts';
 import type { Contribution } from '../types/marketplace';
 
 export const ContributorDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, account, connect } = useWallet();
+  const { projects } = useProjects();
 
   const claimedTasks: Contribution[] = [];
   const reviewTasks: Contribution[] = [];
@@ -140,7 +143,32 @@ export const ContributorDashboardPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Section 1: Active Claims */}
+        {/* Section 1: Discover Ecosystem Projects & Opportunities */}
+        <Box sx={{ mb: 6 }}>
+          <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800, mb: 1 }}>
+            Ecosystem Repositories & Contribution Opportunities ({projects.length})
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Discover open-source Midnight projects published by the community. Click any project to inspect tasks and contribute.
+          </Typography>
+
+          {projects.length > 0 ? (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+              {projects.map((project) => (
+                <ProjectCard key={project.projectId} project={project} />
+              ))}
+            </Box>
+          ) : (
+            <EmptyState
+              title="No Ecosystem Projects Found"
+              description="No open-source repositories have been published on Midnight Network yet. Check back soon or publish your own project!"
+              actionLabel="Publish New Project"
+              onAction={() => navigate('/publish')}
+            />
+          )}
+        </Box>
+
+        {/* Section 2: Active Claims */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800, mb: 3 }}>
             Active Claimed Tasks ({claimedTasks.length})
@@ -194,7 +222,7 @@ export const ContributorDashboardPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Section 2: Completed & Rewarded Tasks */}
+        {/* Section 3: Completed & Rewarded Tasks */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800, mb: 3 }}>
             Completed & Rewarded Contributions ({completedTasks.length})

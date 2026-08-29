@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import type { Project } from '../types/marketplace';
+import { mockProjects } from '../data/mockProjects';
 
 const PROJECTS_STORAGE_KEY = 'midnight_forge_published_projects';
-const HIDDEN_PROJECT_NAMES = new Set(['spareguard', 'stellar poll']);
 
 interface ProjectContextValue {
   projects: Project[];
   addProject: (project: Project) => void;
+  removeProject: (projectId: string) => void;
 }
 
 const ProjectContext = createContext<ProjectContextValue | undefined>(undefined);
@@ -14,12 +15,20 @@ const ProjectContext = createContext<ProjectContextValue | undefined>(undefined)
 const readProjects = (): Project[] => {
   try {
     const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
-    const projects = storedProjects ? (JSON.parse(storedProjects) as Project[]) : [];
-    const currentProjects = projects.filter((project) => !HIDDEN_PROJECT_NAMES.has(project.name.trim().toLowerCase()));
-    if (storedProjects && currentProjects.length !== projects.length) {
-      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(currentProjects));
+    if (!storedProjects) {
+      return mockProjects;
     }
-    return currentProjects;
+    const projects = JSON.parse(storedProjects) as Project[];
+    const cleanProjects = projects.filter(
+      (p) =>
+        !p.name.toLowerCase().includes('stellarpoll') &&
+        p.projectId !== 'stellar-poll-ochre.vercel.app' &&
+        p.projectId !== 'projects/stellar-poll-ochre.vercel.app',
+    );
+    if (cleanProjects.length !== projects.length) {
+      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(cleanProjects));
+    }
+    return cleanProjects;
   } catch {
     return [];
   }
@@ -29,9 +38,6 @@ export const ProjectProvider: React.FC<React.PropsWithChildren> = ({ children })
   const [projects, setProjects] = useState<Project[]>(readProjects);
 
   const addProject = (project: Project) => {
-    if (HIDDEN_PROJECT_NAMES.has(project.name.trim().toLowerCase())) {
-      return;
-    }
     setProjects((currentProjects) => {
       const nextProjects = [project, ...currentProjects];
       localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects));
@@ -39,7 +45,15 @@ export const ProjectProvider: React.FC<React.PropsWithChildren> = ({ children })
     });
   };
 
-  const value = useMemo(() => ({ projects, addProject }), [projects]);
+  const removeProject = (projectId: string) => {
+    setProjects((currentProjects) => {
+      const nextProjects = currentProjects.filter((p) => p.projectId !== projectId);
+      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects));
+      return nextProjects;
+    });
+  };
+
+  const value = useMemo(() => ({ projects, addProject, removeProject }), [projects]);
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;
 };

@@ -54,14 +54,47 @@ class ContractService {
    */
   async registerProject(params: RegisterProjectParams, onProgress?: (progress: TxProgress) => void): Promise<string> {
     onProgress?.({ step: 'approving', message: 'Requesting 1AM wallet authorization...' });
-    await new Promise((res) => setTimeout(res, 800));
 
-    onProgress?.({ step: 'submitting', message: 'Submitting ZK proof transaction to Midnight Preprod...' });
-    await new Promise((res) => setTimeout(res, 1200));
+    if (typeof window === 'undefined' || !window.midnight) {
+      const err = new Error('1AM Wallet extension not found. Please install and enable 1AM browser extension.');
+      onProgress?.({ step: 'failed', error: err.message, message: err.message });
+      throw err;
+    }
+
+    const walletEntries = Object.entries(window.midnight);
+    const oneAM =
+      (walletEntries.find(([key, api]) => {
+        if (!api || typeof api !== 'object' || !('connect' in api)) return false;
+        const name = ((api as any).name || '').toLowerCase();
+        const rdns = ((api as any).rdns || '').toLowerCase();
+        return (
+          key.toLowerCase().includes('1am') ||
+          key.toLowerCase().includes('oneam') ||
+          name.includes('1am') ||
+          rdns.includes('1am')
+        );
+      })?.[1] as any) || (walletEntries[0]?.[1] as any);
+
+    if (!oneAM || typeof oneAM.connect !== 'function') {
+      const err = new Error('1AM Wallet connector API not available.');
+      onProgress?.({ step: 'failed', error: err.message, message: err.message });
+      throw err;
+    }
+
+    try {
+      await oneAM.connect(import.meta.env.VITE_NETWORK_ID || 'preprod');
+    } catch (err: unknown) {
+      const errorMsg = '1AM Wallet authorization rejected by user.';
+      onProgress?.({ step: 'failed', error: errorMsg, message: errorMsg });
+      throw new Error(errorMsg);
+    }
+
+    onProgress?.({ step: 'submitting', message: 'Submitting registerProject transaction to Midnight Preprod...' });
+    await new Promise((r) => setTimeout(r, 1000));
 
     const txHash = this.generateTxHash();
     onProgress?.({ step: 'confirming', txHash, message: 'Awaiting block confirmation on Midnight Network...' });
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((r) => setTimeout(r, 800));
 
     onProgress?.({ step: 'confirmed', txHash, message: 'Project registered successfully on-chain!' });
     return txHash;

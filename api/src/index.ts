@@ -34,6 +34,7 @@ import { MidnightForgePrivateState, createMidnightForgePrivateState } from '../.
 
 import { type Observable } from 'rxjs';
 import { type MidnightForgeDerivedState } from './common-types.js';
+import { ledger } from '../../contract/src/managed/midnight-forge/contract/index.js';
 
 export interface DeployedMidnightForgeAPI {
   readonly deployedContractAddress: ContractAddress;
@@ -52,7 +53,7 @@ export interface DeployedMidnightForgeAPI {
 export class MidnightForgeAPI implements DeployedMidnightForgeAPI {
   private constructor(
     public readonly deployedContract: DeployedMidnightForgeContract,
-    providers: MidnightForgeProviders,
+    private readonly providers: MidnightForgeProviders,
     private readonly logger?: Logger,
   ) {
     this.deployedContractAddress = deployedContract.deployTxData.public.contractAddress;
@@ -78,6 +79,26 @@ export class MidnightForgeAPI implements DeployedMidnightForgeAPI {
       params.improvementAreas.join(', '),
       BigInt(Date.now()),
     );
+
+    const state = await this.providers.publicDataProvider.queryContractState(this.deployedContractAddress);
+    if (!state) {
+      throw new Error('registerProject was finalized, but the contract state is not available from the indexer.');
+    }
+    const projects = ledger(state.data).projects;
+    if (!projects.member(projectId)) {
+      throw new Error('registerProject was finalized, but the project was not found in the indexed contract state.');
+    }
+
+    const project = projects.lookup(projectId);
+    if (
+      project.name !== params.name ||
+      project.description !== params.description ||
+      project.githubRepository !== params.githubRepository ||
+      project.deploymentUrl !== (params.deploymentUrl ?? '') ||
+      project.improvementAreas !== params.improvementAreas.join(', ')
+    ) {
+      throw new Error('registerProject was finalized, but the indexed project data does not match the submitted data.');
+    }
 
     return transaction.public.txId;
   }

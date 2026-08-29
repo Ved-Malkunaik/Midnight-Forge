@@ -45,7 +45,7 @@ bulletin-board/
 
 ## 🏗 System Architecture & Preprod Address
 
-- **Preprod Contract Address**: `0200546febbb7a49324ecd734514cb7df13986d4c7ac5bef1860639087892788ab5e`
+- **Preprod Contract Address**: configure the deployed address with `VITE_MIDNIGHT_FORGE_CONTRACT_ADDRESS`.
 - **Network ID**: `preprod`
 
 For complete architectural details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
