@@ -60,6 +60,7 @@ wallet.json
 
 # Compact
 managed/
+!contract/src/managed/
 
 .claude
 .midnight-expert

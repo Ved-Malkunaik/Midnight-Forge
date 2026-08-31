@@ -1,0 +1,696 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "registerProject",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "projectId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "githubRepository",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "deploymentUrl",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "improvementAreas",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "updateProject",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "projectId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "githubRepository",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "deploymentUrl",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "improvementAreas",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "getProject",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "projectId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Struct",
+        "name": "Project",
+        "elements": [
+          {
+            "name": "owner",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "description",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "githubRepository",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "deploymentUrl",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "improvementAreas",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "createContribution",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "projectId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "title",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "difficulty",
+          "type": {
+            "type-name": "Enum",
+            "name": "Difficulty",
+            "elements": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "EXPERT"
+            ]
+          }
+        },
+        {
+          "name": "rewardAmount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "githubIssueReference",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        },
+        {
+          "name": "githubPrReference",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "claimContribution",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "submitContribution",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "githubPrReference",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "markContributionMerged",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "acceptContribution",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "fundReward",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "releaseReward",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "getContribution",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "contributionId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Struct",
+        "name": "Contribution",
+        "elements": [
+          {
+            "name": "projectId",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "creator",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "title",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "description",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "difficulty",
+            "type": {
+              "type-name": "Enum",
+              "name": "Difficulty",
+              "elements": [
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "EXPERT"
+              ]
+            }
+          },
+          {
+            "name": "rewardAmount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "type-name": "Enum",
+              "name": "ContributionStatus",
+              "elements": [
+                "OPEN",
+                "CLAIMED",
+                "PR_SUBMITTED",
+                "MERGED",
+                "ACCEPTED",
+                "REWARDED"
+              ]
+            }
+          },
+          {
+            "name": "claimedBy",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "githubIssueReference",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "githubPrReference",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "rewardState",
+            "type": {
+              "type-name": "Enum",
+              "name": "RewardState",
+              "elements": [
+                "UNFUNDED",
+                "FUNDED",
+                "RELEASABLE",
+                "RELEASED"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "localSecretKey",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "projects",
+      "index": 0,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "Project",
+        "elements": [
+          {
+            "name": "owner",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "description",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "githubRepository",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "deploymentUrl",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "improvementAreas",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "contributions",
+      "index": 1,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "Contribution",
+        "elements": [
+          {
+            "name": "projectId",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "creator",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "title",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "description",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "difficulty",
+            "type": {
+              "type-name": "Enum",
+              "name": "Difficulty",
+              "elements": [
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "EXPERT"
+              ]
+            }
+          },
+          {
+            "name": "rewardAmount",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "type-name": "Enum",
+              "name": "ContributionStatus",
+              "elements": [
+                "OPEN",
+                "CLAIMED",
+                "PR_SUBMITTED",
+                "MERGED",
+                "ACCEPTED",
+                "REWARDED"
+              ]
+            }
+          },
+          {
+            "name": "claimedBy",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "githubIssueReference",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "githubPrReference",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          },
+          {
+            "name": "rewardState",
+            "type": {
+              "type-name": "Enum",
+              "name": "RewardState",
+              "elements": [
+                "UNFUNDED",
+                "FUNDED",
+                "RELEASABLE",
+                "RELEASED"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
