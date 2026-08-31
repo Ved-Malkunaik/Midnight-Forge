@@ -21,39 +21,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '12px',
-        backgroundColor: '#131620',
-        border: '1px solid #1E2332',
-        transition: 'all 0.2s ease-in-out',
+        borderRadius: 0,
+        backgroundColor: '#000000',
+        border: '1px solid #FFFFFF',
+        transition: 'transform 0.3s ease, background-color 0.3s ease',
         '&:hover': {
-          borderColor: '#3B82F6',
-          transform: 'translateY(-2px)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+          transform: 'scale(1.015)',
         },
       }}
     >
       {/* Top Bar: Category & Repository */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Chip
-          label={project.category}
+          label={project.category.toUpperCase()}
           size="small"
           sx={{
             height: 22,
-            fontSize: '0.675rem',
-            fontWeight: 700,
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            color: '#60A5FA',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
+            fontSize: '0.625rem',
+            fontWeight: 800,
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
+            border: '1px solid #FFFFFF',
+            borderRadius: 0,
           }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-          <GitHubIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
+          <GitHubIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />
           <Typography
             variant="caption"
-            color="text.secondary"
             sx={{
               fontFamily: 'monospace',
               fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.7)',
               maxWidth: 140,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -66,27 +65,26 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </Box>
 
       {/* Project Title */}
-      <Typography variant="h6" color="text.primary" sx={{ mb: 0.5, fontWeight: 700, lineHeight: 1.3 }}>
+      <Typography variant="h6" color="#FFFFFF" sx={{ mb: 0.5, fontWeight: 900, lineHeight: 1.2, textTransform: 'uppercase' }}>
         {project.name}
       </Typography>
 
       {/* Owner Wallet Address */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-          Owner:
+        <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+          OWNER:
         </Typography>
 
         <Typography
           variant="caption"
-          color="#60A5FA"
-          sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.75rem' }}
+          sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.75rem', color: '#FFFFFF' }}
         >
-          {project.owner ? shortenAddress(project.owner) : 'Connected 1AM Wallet'}
+          {project.owner ? shortenAddress(project.owner) : '1AM WALLET'}
         </Typography>
       </Box>
 
       {/* Short Description */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, flexGrow: 1, lineHeight: 1.6 }}>
+      <Typography variant="body2" sx={{ mb: 2.5, flexGrow: 1, lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.75)' }}>
         {project.shortDescription}
       </Typography>
 
@@ -98,11 +96,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             label={tech}
             size="small"
             sx={{
-              height: 22,
-              fontSize: '0.675rem',
+              height: 20,
+              fontSize: '0.625rem',
               fontWeight: 600,
-              backgroundColor: '#1E2332',
-              color: '#94A3B8',
+              backgroundColor: '#000000',
+              color: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: 0,
             }}
           />
         ))}
@@ -112,17 +112,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       <Box
         sx={{
           pt: 2,
-          borderTop: '1px solid #1E2332',
+          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
           display: 'flex',
           alignItems: 'center',
           justify: 'space-between',
         }}
       >
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
-            Rewards Pool
+          <Typography variant="caption" sx={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+            REWARD BOUNTY
           </Typography>
-          <Typography variant="subtitle2" color="#10B981" sx={{ fontWeight: 700 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#FFFFFF', fontFamily: 'monospace' }}>
             {project.rewardPool}
           </Typography>
         </Box>
@@ -130,32 +130,26 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         <Button
           variant="outlined"
           size="small"
-          onClick={() => {
-            const rawUrl = project.deploymentUrl || project.githubRepository;
-            if (rawUrl) {
-              const formattedUrl = /^https?:\/\//i.test(rawUrl.trim()) ? rawUrl.trim() : `https://${rawUrl.trim()}`;
-              window.open(formattedUrl, '_blank', 'noopener,noreferrer');
-            } else {
-              navigate(`/projects/${project.projectId}`);
-            }
-          }}
+          onClick={() => navigate(`/projects/${project.projectId}`)}
           endIcon={<ArrowForwardIcon fontSize="small" />}
           sx={{
-            borderColor: '#262D3D',
-            color: '#F8FAFC',
+            borderColor: '#FFFFFF',
+            color: '#FFFFFF',
             px: 2,
             py: 0.6,
-            fontSize: '0.8rem',
-            fontWeight: 600,
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            borderRadius: 0,
             '&:hover': {
-              borderColor: '#3B82F6',
-              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
             },
           }}
         >
-          View Project
+          VIEW PROJECT
         </Button>
       </Box>
     </Paper>
   );
 };
+

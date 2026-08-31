@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -31,6 +31,7 @@ const navItems = [
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isConnected, isConnecting, status, account, connect } = useWallet();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
@@ -48,18 +49,19 @@ export const Navbar: React.FC = () => {
     if (isConnecting) {
       return (
         <Button
-          variant="contained"
+          variant="outlined"
           disabled
-          startIcon={<CircularProgress size={16} sx={{ color: '#94A3B8' }} />}
+          startIcon={<CircularProgress size={14} sx={{ color: '#FFFFFF' }} />}
           sx={{
-            backgroundColor: '#1E2332',
-            color: '#94A3B8',
+            borderColor: 'rgba(255, 255, 255, 0.4)',
+            color: 'rgba(255, 255, 255, 0.7)',
             px: 2,
             py: 0.8,
-            fontSize: '0.875rem',
+            fontSize: '0.8125rem',
+            borderRadius: 0,
           }}
         >
-          Connecting...
+          CONNECTING...
         </Button>
       );
     }
@@ -70,16 +72,17 @@ export const Navbar: React.FC = () => {
           variant="outlined"
           onClick={handleWalletClick}
           sx={{
-            borderColor: '#262D3D',
-            backgroundColor: 'rgba(59, 130, 246, 0.06)',
-            color: '#F8FAFC',
+            borderColor: '#FFFFFF',
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
             px: 2,
             py: 0.8,
-            fontSize: '0.875rem',
-            gap: 1,
+            fontSize: '0.8125rem',
+            borderRadius: 0,
+            transition: 'all 0.3s ease',
             '&:hover': {
-              borderColor: '#3B82F6',
-              backgroundColor: 'rgba(59, 130, 246, 0.12)',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
             },
           }}
         >
@@ -87,12 +90,12 @@ export const Navbar: React.FC = () => {
             sx={{
               width: 8,
               height: 8,
-              borderRadius: '50%',
-              backgroundColor: '#10B981',
-              boxShadow: '0 0 6px #10B981',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 0,
+              mr: 1,
             }}
           />
-          <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+          <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8125rem' }}>
             1AM • {account.shortenedAddress}
           </Typography>
         </Button>
@@ -103,17 +106,21 @@ export const Navbar: React.FC = () => {
       return (
         <Button
           variant="outlined"
-          color="error"
           onClick={handleWalletClick}
           sx={{
-            borderColor: 'rgba(239, 68, 68, 0.4)',
-            color: '#EF4444',
+            borderColor: '#FFFFFF',
+            color: '#FFFFFF',
             px: 2,
             py: 0.8,
-            fontSize: '0.875rem',
+            fontSize: '0.8125rem',
+            borderRadius: 0,
+            '&:hover': {
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
+            },
           }}
         >
-          Retry Connection
+          RETRY CONNECTION
         </Button>
       );
     }
@@ -121,17 +128,18 @@ export const Navbar: React.FC = () => {
     return (
       <Button
         variant="contained"
-        color="primary"
         onClick={() => void connect()}
         startIcon={<AccountBalanceWalletIcon fontSize="small" />}
         sx={{
-          px: 2.2,
+          px: 2.5,
           py: 0.8,
-          fontWeight: 600,
-          fontSize: '0.875rem',
+          fontWeight: 700,
+          fontSize: '0.8125rem',
+          letterSpacing: '0.05em',
+          borderRadius: 0,
         }}
       >
-        Connect Wallet
+        CONNECT WALLET
       </Button>
     );
   };
@@ -142,9 +150,8 @@ export const Navbar: React.FC = () => {
         position="sticky"
         elevation={0}
         sx={{
-          backgroundColor: '#0B0C10',
-          borderBottom: '1px solid #1E2332',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: '#000000',
+          borderBottom: '1px solid #FFFFFF',
         }}
       >
         <Toolbar
@@ -154,7 +161,7 @@ export const Navbar: React.FC = () => {
             width: '100%',
             mx: 'auto',
             px: { xs: 2, sm: 4 },
-            py: 1,
+            py: 1.5,
           }}
         >
           {/* LEFT: Logo & Wordmark */}
@@ -173,33 +180,35 @@ export const Navbar: React.FC = () => {
               src="/forge-logo.png"
               alt="Midnight Forge Logo"
               sx={{
-                height: 36,
+                height: 32,
                 width: 'auto',
                 objectFit: 'contain',
+                filter: 'brightness(0) invert(1)',
               }}
             />
             <Box>
-              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
-                Midnight Forge
+              <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+                MIDNIGHT FORGE
               </Typography>
               <Typography
                 variant="caption"
-                color="text.secondary"
-                sx={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}
+                sx={{ fontSize: '0.625rem', letterSpacing: '0.08em', color: 'rgba(255, 255, 255, 0.6)', display: 'block' }}
               >
                 OPEN-SOURCE CONTRIBUTION PLATFORM
               </Typography>
             </Box>
             <Chip
-              label="Preprod"
+              label="PREPROD"
               size="small"
               sx={{
                 ml: 1,
-                height: 18,
+                height: 20,
                 fontSize: '0.625rem',
-                fontWeight: 700,
-                backgroundColor: '#1E2332',
-                color: '#94A3B8',
+                fontWeight: 800,
+                backgroundColor: '#000000',
+                color: '#FFFFFF',
+                border: '1px solid #FFFFFF',
+                borderRadius: 0,
                 display: { xs: 'none', sm: 'inline-flex' },
               }}
             />
@@ -210,27 +219,39 @@ export const Navbar: React.FC = () => {
             sx={{
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              gap: 3,
+              gap: 1,
               mx: 'auto',
             }}
           >
-            {navItems.map((item) => (
-              <Button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                sx={{
-                  color: '#94A3B8',
-                  fontWeight: 500,
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    color: '#F8FAFC',
-                    backgroundColor: 'transparent',
-                  },
-                }}
-              >
-                {item.label}
-              </Button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.label}
+                  onClick={() => navigate(item.path)}
+                  sx={{
+                    color: isActive ? '#000000' : '#FFFFFF',
+                    backgroundColor: isActive ? '#FFFFFF' : 'transparent',
+                    border: '1px solid',
+                    borderColor: isActive ? '#FFFFFF' : 'transparent',
+                    fontWeight: 700,
+                    fontSize: '0.8125rem',
+                    letterSpacing: '0.03em',
+                    px: 2,
+                    py: 0.6,
+                    borderRadius: 0,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: '#FFFFFF',
+                      color: '#000000',
+                      borderColor: '#FFFFFF',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
           </Box>
 
           {/* RIGHT: Wallet Button & Mobile Toggle */}
@@ -239,7 +260,7 @@ export const Navbar: React.FC = () => {
 
             <IconButton
               onClick={() => setMobileOpen(!mobileOpen)}
-              sx={{ display: { xs: 'flex', md: 'none' }, color: 'text.primary' }}
+              sx={{ display: { xs: 'flex', md: 'none' }, color: '#FFFFFF', borderRadius: 0 }}
               aria-label="Toggle navigation drawer"
             >
               <MenuIcon />
@@ -257,40 +278,51 @@ export const Navbar: React.FC = () => {
           paper: {
             sx: {
               width: 280,
-              backgroundColor: '#0B0C10',
-              borderLeft: '1px solid #1E2332',
+              backgroundColor: '#000000',
+              borderLeft: '1px solid #FFFFFF',
               p: 3,
+              borderRadius: 0,
             },
           },
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box component="img" src="/forge-logo.png" alt="Logo" sx={{ height: 24, width: 'auto' }} />
-            <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
-              Midnight Forge
+            <Box component="img" src="/forge-logo.png" alt="Logo" sx={{ height: 24, width: 'auto', filter: 'brightness(0) invert(1)' }} />
+            <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 800 }}>
+              MIDNIGHT FORGE
             </Typography>
           </Box>
-          <IconButton onClick={() => setMobileOpen(false)} size="small" sx={{ color: 'text.secondary' }}>
+          <IconButton onClick={() => setMobileOpen(false)} size="small" sx={{ color: '#FFFFFF' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
         <List sx={{ mb: 3 }}>
           {navItems.map((item) => (
-            <ListItem key={item.label} disablePadding>
+            <ListItem key={item.label} disablePadding sx={{ mb: 1 }}>
               <ListItemButton
                 onClick={() => {
                   setMobileOpen(false);
                   navigate(item.path);
                 }}
-                sx={{ borderRadius: '6px', py: 1.2 }}
+                sx={{
+                  border: '1px solid #FFFFFF',
+                  borderRadius: 0,
+                  py: 1.2,
+                  '&:hover': {
+                    backgroundColor: '#FFFFFF',
+                    '& .MuiListItemText-primary': {
+                      color: '#000000',
+                    },
+                  },
+                }}
               >
                 <ListItemText
                   primary={item.label}
                   slotProps={{
                     primary: {
-                      sx: { fontWeight: 600, color: 'text.primary' },
+                      sx: { fontWeight: 700, color: '#FFFFFF', fontSize: '0.875rem' },
                     },
                   }}
                 />
@@ -299,7 +331,7 @@ export const Navbar: React.FC = () => {
           ))}
         </List>
 
-        <Box sx={{ pt: 2, borderTop: '1px solid #1E2332' }}>{renderWalletButton()}</Box>
+        <Box sx={{ pt: 2, borderTop: '1px solid #FFFFFF' }}>{renderWalletButton()}</Box>
       </Drawer>
 
       {/* Wallet Connection Dialog */}
@@ -310,3 +342,4 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
+

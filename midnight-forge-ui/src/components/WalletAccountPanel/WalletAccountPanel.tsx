@@ -57,6 +57,8 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
           pb: 1,
           pt: 2.5,
           px: 3,
+          backgroundColor: '#000000',
+          color: '#FFFFFF',
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -64,19 +66,20 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
             sx={{
               width: 28,
               height: 28,
-              borderRadius: '6px',
-              backgroundColor: '#1E2332',
+              borderRadius: 0,
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
               display: 'flex',
               alignItems: 'center',
               justify: 'center',
-              color: '#3B82F6',
-              fontWeight: 700,
+              fontWeight: 900,
               fontSize: '0.75rem',
+              fontFamily: 'monospace',
             }}
           >
             1AM
           </Box>
-          <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+          <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
             {activeWallet?.name || '1AM Wallet'}
           </Typography>
         </Box>
@@ -84,16 +87,16 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
           onClick={onClose}
           size="small"
           aria-label="Close account panel"
-          sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
+          sx={{ color: '#FFFFFF' }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3, pb: 3, pt: 1 }}>
+      <DialogContent sx={{ px: 3, pb: 3, pt: 1, backgroundColor: '#000000' }}>
         {/* Network Mismatch Warning */}
         {network && !network.isMatch && (
-          <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ mb: 2, borderRadius: '8px' }}>
+          <Alert severity="warning" icon={<WarningAmberIcon />} sx={{ mb: 2, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF', color: '#FFFFFF' }}>
             Network mismatch. Connected to <strong>{network.current}</strong>, expected{' '}
             <strong>{network.expected}</strong>.
           </Alert>
@@ -105,20 +108,20 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
             elevation={0}
             sx={{
               p: 2,
-              borderRadius: '10px',
-              backgroundColor: '#0F121C',
-              border: '1px solid #1E2332',
+              borderRadius: 0,
+              backgroundColor: '#000000',
+              border: '1px solid #FFFFFF',
             }}
           >
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, fontWeight: 600, display: 'block' }}>
-              Wallet Address
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 800, display: 'block', color: 'rgba(255, 255, 255, 0.6)' }}>
+              CONNECTED WALLET ADDRESS
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+              <Typography variant="body2" color="#FFFFFF" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
                 {account?.shortenedAddress || 'No Address'}
               </Typography>
               <Tooltip title={copied ? 'Copied!' : 'Copy Address'}>
-                <IconButton onClick={handleCopyAddress} size="small" sx={{ color: copied ? '#10B981' : '#94A3B8' }}>
+                <IconButton onClick={() => void handleCopyAddress()} size="small" sx={{ color: '#FFFFFF' }}>
                   {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
                 </IconButton>
               </Tooltip>
@@ -130,23 +133,23 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
             elevation={0}
             sx={{
               p: 2,
-              borderRadius: '10px',
-              backgroundColor: '#0F121C',
-              border: '1px solid #1E2332',
+              borderRadius: 0,
+              backgroundColor: '#000000',
+              border: '1px solid #FFFFFF',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Balance
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>
+                ACCOUNT BALANCE
               </Typography>
-              <IconButton onClick={refreshBalance} size="small" sx={{ color: 'text.secondary', p: 0.5 }}>
+              <IconButton onClick={() => void refreshBalance()} size="small" sx={{ color: '#FFFFFF', p: 0.5 }}>
                 <RefreshIcon fontSize="small" />
               </IconButton>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-              {balance.status === 'loading' ? <CircularProgress size={16} sx={{ color: '#3B82F6', mr: 1 }} /> : null}
-              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
+              {balance.status === 'loading' ? <CircularProgress size={16} sx={{ color: '#FFFFFF', mr: 1 }} /> : null}
+              <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                 {balance.totalFormatted}
               </Typography>
             </Box>
@@ -155,25 +158,25 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justify: 'space-between',
                 mt: 2,
                 pt: 1.5,
-                borderTop: '1px solid #1E2332',
+                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                Network
+              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', fontWeight: 700 }}>
+                NETWORK
               </Typography>
               <Chip
-                label={network?.current || 'Preprod'}
+                label={(network?.current || 'PREPROD').toUpperCase()}
                 size="small"
                 sx={{
                   height: 22,
                   fontSize: '0.7rem',
-                  fontWeight: 600,
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  color: '#10B981',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  fontWeight: 800,
+                  backgroundColor: '#FFFFFF',
+                  color: '#000000',
+                  borderRadius: 0,
                 }}
               />
             </Box>
@@ -182,25 +185,27 @@ export const WalletAccountPanel: React.FC<WalletAccountPanelProps> = ({ open, on
           {/* Disconnect Button */}
           <Button
             variant="outlined"
-            color="error"
             fullWidth
-            onClick={handleDisconnect}
+            onClick={() => void handleDisconnect()}
             startIcon={<LogoutIcon />}
             sx={{
               mt: 1,
               py: 1.2,
-              borderColor: 'rgba(239, 68, 68, 0.3)',
-              color: '#EF4444',
+              borderColor: '#FFFFFF',
+              color: '#FFFFFF',
+              borderRadius: 0,
+              fontWeight: 800,
               '&:hover': {
-                borderColor: '#EF4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
               },
             }}
           >
-            Disconnect Wallet
+            DISCONNECT WALLET
           </Button>
         </Box>
       </DialogContent>
     </Dialog>
   );
 };
+

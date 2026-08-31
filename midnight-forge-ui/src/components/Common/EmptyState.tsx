@@ -16,9 +16,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, acti
       sx={{
         p: 6,
         textAlign: 'center',
-        borderRadius: '12px',
-        backgroundColor: '#131620',
-        border: '1px border #1E2332',
+        borderRadius: 0,
+        backgroundColor: '#000000',
+        border: '1px solid #FFFFFF',
         maxWidth: 540,
         mx: 'auto',
         my: 4,
@@ -28,32 +28,32 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, acti
         sx={{
           width: 56,
           height: 56,
-          borderRadius: '50%',
-          backgroundColor: '#1E2332',
+          border: '1px solid #FFFFFF',
           display: 'flex',
           alignItems: 'center',
           justify: 'center',
           mx: 'auto',
           mb: 2,
-          color: '#94A3B8',
+          color: '#FFFFFF',
         }}
       >
         <FolderOffOutlinedIcon sx={{ fontSize: 28 }} />
       </Box>
 
-      <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 1 }}>
+      <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 800, mb: 1, textTransform: 'uppercase' }}>
         {title}
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
+      <Typography variant="body2" sx={{ mb: 3, lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)' }}>
         {description}
       </Typography>
 
       {actionLabel && onAction && (
-        <Button variant="contained" color="primary" onClick={onAction} sx={{ px: 3, py: 1 }}>
+        <Button variant="contained" onClick={onAction} sx={{ px: 3, py: 1, borderRadius: 0, fontWeight: 800 }}>
           {actionLabel}
         </Button>
       )}
     </Paper>
   );
 };
+

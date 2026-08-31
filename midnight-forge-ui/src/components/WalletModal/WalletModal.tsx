@@ -54,28 +54,30 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
           pb: 1,
           pt: 2.5,
           px: 3,
+          backgroundColor: '#000000',
+          color: '#FFFFFF',
         }}
       >
-        <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
-          Connect Wallet
+        <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
+          Connect 1AM Wallet
         </Typography>
         <IconButton
           onClick={handleClose}
           size="small"
           aria-label="Close wallet modal"
-          sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
+          sx={{ color: '#FFFFFF' }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3, pb: 3, pt: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-          Select a supported Midnight wallet to connect to Midnight Forge.
+      <DialogContent sx={{ px: 3, pb: 3, pt: 1, backgroundColor: '#000000' }}>
+        <Typography variant="body2" sx={{ mb: 2.5, color: 'rgba(255, 255, 255, 0.75)' }}>
+          Select a supported Midnight wallet connector to access Midnight Forge.
         </Typography>
 
         {error && (
-          <Alert severity="error" onClose={clearError} sx={{ mb: 2.5, borderRadius: '8px' }}>
+          <Alert severity="error" onClose={clearError} sx={{ mb: 2.5, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF', color: '#FFFFFF' }}>
             {error.message}
           </Alert>
         )}
@@ -84,21 +86,23 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
           {/* 1AM Wallet Option (Primary) */}
           <Paper
             elevation={0}
-            onClick={() => !isConnecting && handleSelectWallet(primaryWallet?.id || '1am')}
+            onClick={() => !isConnecting && void handleSelectWallet(primaryWallet?.id || '1am')}
             sx={{
               p: 2,
               display: 'flex',
               alignItems: 'center',
               justify: 'space-between',
               cursor: isConnecting ? 'not-allowed' : 'pointer',
-              borderRadius: '10px',
-              border: '1px solid',
-              borderColor: primaryWallet?.isPrimary ? '#3B82F6' : '#262D3D',
-              backgroundColor: primaryWallet?.isPrimary ? 'rgba(59, 130, 246, 0.04)' : '#131620',
-              transition: 'all 0.15s ease-in-out',
+              borderRadius: 0,
+              border: '1px solid #FFFFFF',
+              backgroundColor: '#000000',
+              transition: 'all 0.2s ease-in-out',
               '&:hover': {
-                borderColor: '#3B82F6',
-                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                '& .MuiTypography-root, & .MuiBox-root, & .MuiChip-root': {
+                  color: '#000000',
+                },
               },
             }}
           >
@@ -107,46 +111,47 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
                 sx={{
                   width: 40,
                   height: 40,
-                  borderRadius: '8px',
-                  backgroundColor: '#1E2332',
+                  borderRadius: 0,
+                  backgroundColor: '#FFFFFF',
+                  color: '#000000',
                   display: 'flex',
                   alignItems: 'center',
                   justify: 'center',
-                  color: '#3B82F6',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
+                  fontWeight: 900,
+                  fontSize: '0.85rem',
+                  fontFamily: 'monospace',
                 }}
               >
                 1AM
               </Box>
               <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700 }}>
+                  <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                     1AM Wallet
                   </Typography>
                   <Chip
-                    label="Primary"
+                    label="PRIMARY"
                     size="small"
                     sx={{
-                      height: 20,
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                      color: '#60A5FA',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      height: 18,
+                      fontSize: '0.6rem',
+                      fontWeight: 800,
+                      backgroundColor: '#FFFFFF',
+                      color: '#000000',
+                      borderRadius: 0,
                     }}
                   />
                 </Box>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   Official Midnight Desktop & Browser Wallet
                 </Typography>
               </Box>
             </Box>
 
             {isConnecting ? (
-              <CircularProgress size={20} sx={{ color: '#3B82F6' }} />
+              <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
             ) : (
-              <CheckCircleIcon sx={{ color: primaryWallet?.isPrimary ? '#3B82F6' : 'text.secondary', fontSize: 20 }} />
+              <CheckCircleIcon sx={{ color: '#FFFFFF', fontSize: 20 }} />
             )}
           </Paper>
 
@@ -157,29 +162,29 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
               <Paper
                 key={w.id}
                 elevation={0}
-                onClick={() => !isConnecting && handleSelectWallet(w.id)}
+                onClick={() => !isConnecting && void handleSelectWallet(w.id)}
                 sx={{
                   p: 2,
                   display: 'flex',
                   alignItems: 'center',
                   justify: 'space-between',
                   cursor: isConnecting ? 'not-allowed' : 'pointer',
-                  borderRadius: '10px',
-                  border: '1px solid #262D3D',
-                  backgroundColor: '#131620',
+                  borderRadius: 0,
+                  border: '1px solid #FFFFFF',
+                  backgroundColor: '#000000',
                   '&:hover': {
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
                   },
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <AccountBalanceWalletIcon sx={{ color: 'text.secondary' }} />
-                  <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
+                  <AccountBalanceWalletIcon sx={{ color: '#FFFFFF' }} />
+                  <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 800 }}>
                     {w.name}
                   </Typography>
                 </Box>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'rgba(255, 255, 255, 0.6)' }}>
                   v{w.apiVersion}
                 </Typography>
               </Paper>
@@ -189,16 +194,16 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
             <Box
               sx={{
                 p: 2,
-                borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.05)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                borderRadius: 0,
+                backgroundColor: '#000000',
+                border: '1px solid #FFFFFF',
                 mt: 1,
               }}
             >
-              <Typography variant="body2" color="error.main" sx={{ mb: 0.5, fontWeight: 600 }}>
+              <Typography variant="body2" color="#FFFFFF" sx={{ mb: 0.5, fontWeight: 800, textTransform: 'uppercase' }}>
                 1AM Wallet Extension Not Detected
               </Typography>
-              <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 1.5 }}>
+              <Typography variant="caption" sx={{ mb: 1.5, display: 'block', color: 'rgba(255, 255, 255, 0.7)' }}>
                 To connect to Midnight Forge, please install and enable the official 1AM browser extension.
               </Typography>
               <Button
@@ -209,12 +214,14 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
                 target="_blank"
                 rel="noreferrer"
                 sx={{
-                  borderColor: '#262D3D',
-                  color: '#94A3B8',
+                  borderColor: '#FFFFFF',
+                  color: '#FFFFFF',
                   fontSize: '0.75rem',
+                  borderRadius: 0,
+                  fontWeight: 800,
                 }}
               >
-                Download 1AM Wallet
+                DOWNLOAD 1AM WALLET ↗
               </Button>
             </Box>
           )}
@@ -223,3 +230,4 @@ export const WalletModal: React.FC<WalletModalProps> = ({ open, onClose }) => {
     </Dialog>
   );
 };
+

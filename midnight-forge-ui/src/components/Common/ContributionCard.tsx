@@ -12,21 +12,6 @@ interface ContributionCardProps {
 export const ContributionCard: React.FC<ContributionCardProps> = ({ contribution }) => {
   const navigate = useNavigate();
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner':
-        return '#10B981';
-      case 'Intermediate':
-        return '#3B82F6';
-      case 'Advanced':
-        return '#F59E0B';
-      case 'Expert':
-        return '#EF4444';
-      default:
-        return '#94A3B8';
-    }
-  };
-
   return (
     <Paper
       elevation={0}
@@ -35,51 +20,50 @@ export const ContributionCard: React.FC<ContributionCardProps> = ({ contribution
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '12px',
-        backgroundColor: '#131620',
-        border: '1px solid #1E2332',
-        transition: 'all 0.2s ease-in-out',
+        borderRadius: 0,
+        backgroundColor: '#000000',
+        border: '1px solid #FFFFFF',
+        transition: 'transform 0.3s ease, background-color 0.3s ease',
         '&:hover': {
-          borderColor: '#3B82F6',
-          transform: 'translateY(-2px)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+          transform: 'scale(1.015)',
         },
       }}
     >
       {/* Top Header: Project Name & Status Badge */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-        <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.04em' }}>
-          {contribution.projectName}
+        <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.04em', color: '#FFFFFF' }}>
+          {contribution.projectName.toUpperCase()}
         </Typography>
         <StatusBadge status={contribution.status} />
       </Box>
 
       {/* Title */}
-      <Typography variant="subtitle1" color="text.primary" sx={{ mb: 1, fontWeight: 700, lineHeight: 1.3 }}>
+      <Typography variant="subtitle1" color="#FFFFFF" sx={{ mb: 1, fontWeight: 900, lineHeight: 1.3, textTransform: 'uppercase' }}>
         {contribution.title}
       </Typography>
 
       {/* Description */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, flexGrow: 1, lineHeight: 1.6 }}>
+      <Typography variant="body2" sx={{ mb: 2.5, flexGrow: 1, lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.75)' }}>
         {contribution.description}
       </Typography>
 
       {/* Metadata Row: Difficulty & Reward */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
         <Chip
-          label={contribution.difficulty}
+          label={contribution.difficulty.toUpperCase()}
           size="small"
           sx={{
-            height: 22,
-            fontSize: '0.675rem',
-            fontWeight: 700,
-            backgroundColor: `${getDifficultyColor(contribution.difficulty)}15`,
-            color: getDifficultyColor(contribution.difficulty),
-            border: `1px solid ${getDifficultyColor(contribution.difficulty)}30`,
+            height: 20,
+            fontSize: '0.625rem',
+            fontWeight: 800,
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255, 255, 255, 0.4)',
+            borderRadius: 0,
           }}
         />
-        <Typography variant="subtitle2" color="#10B981" sx={{ fontWeight: 700 }}>
-          Reward: {contribution.rewardAmount}
+        <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#FFFFFF', fontFamily: 'monospace' }}>
+          BOUNTY: {contribution.rewardAmount}
         </Typography>
       </Box>
 
@@ -87,7 +71,7 @@ export const ContributionCard: React.FC<ContributionCardProps> = ({ contribution
       <Box
         sx={{
           pt: 2,
-          borderTop: '1px solid #1E2332',
+          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
           display: 'flex',
           justify: 'flex-end',
         }}
@@ -98,21 +82,23 @@ export const ContributionCard: React.FC<ContributionCardProps> = ({ contribution
           onClick={() => navigate(`/contributions/${contribution.contributionId}`)}
           endIcon={<ArrowForwardIcon fontSize="small" />}
           sx={{
-            borderColor: '#262D3D',
-            color: '#F8FAFC',
+            borderColor: '#FFFFFF',
+            color: '#FFFFFF',
             px: 2,
             py: 0.6,
-            fontSize: '0.8rem',
-            fontWeight: 600,
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            borderRadius: 0,
             '&:hover': {
-              borderColor: '#3B82F6',
-              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
             },
           }}
         >
-          View Opportunity
+          VIEW OPPORTUNITY
         </Button>
       </Box>
     </Paper>
   );
 };
+

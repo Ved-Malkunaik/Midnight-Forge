@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Button } from '@mui/material';
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
-import AddIcon from '@mui/icons-material/Add';
 import { useProjects } from '../../contexts';
 import { ProjectCard } from '../Common/ProjectCard';
 import { EmptyState } from '../Common/EmptyState';
@@ -13,26 +12,26 @@ export const FeaturedProjects: React.FC = () => {
   const featured = projects.slice(0, 3);
 
   return (
-    <Box id="explore" sx={{ py: { xs: 8, md: 10 } }}>
+    <Box id="explore" sx={{ py: { xs: 8, md: 10 }, backgroundColor: '#000000' }}>
       <Container maxWidth="lg">
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 5 }}>
           <Box>
-            <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
-              FEATURED MARKETPLACE OPPORTUNITIES
+            <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
+              FEATURED MARKETPLACE REPOSITORIES
             </Typography>
-            <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
+            <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
               Featured Repositories
             </Typography>
           </Box>
 
           {projects.length > 0 && (
             <Button
-              variant="text"
+              variant="outlined"
               onClick={() => navigate('/explore')}
               endIcon={<ArrowOutwardIcon fontSize="small" />}
-              sx={{ color: '#94A3B8', '&:hover': { color: '#F8FAFC' } }}
+              sx={{ color: '#FFFFFF', borderColor: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
             >
-              View All
+              VIEW ALL
             </Button>
           )}
         </Box>
@@ -47,7 +46,7 @@ export const FeaturedProjects: React.FC = () => {
           <EmptyState
             title="No Published Repositories Yet"
             description="Be the first developer to publish an open-source project on Midnight Network using 1AM Wallet."
-            actionLabel="Publish a Project"
+            actionLabel="PUBLISH A PROJECT"
             onAction={() => navigate('/publish')}
           />
         )}
@@ -55,3 +54,4 @@ export const FeaturedProjects: React.FC = () => {
     </Box>
   );
 };
+

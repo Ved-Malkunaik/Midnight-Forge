@@ -8,11 +8,11 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        backgroundColor: '#07080B',
-        borderTop: '1px solid #1E2332',
+        backgroundColor: '#000000',
+        borderTop: '1px solid #FFFFFF',
         pt: 8,
         pb: 5,
-        color: '#94A3B8',
+        color: 'rgba(255, 255, 255, 0.7)',
         mt: 'auto',
       }}
     >
@@ -29,13 +29,14 @@ export const Footer: React.FC = () => {
                   height: 32,
                   width: 'auto',
                   objectFit: 'contain',
+                  filter: 'brightness(0) invert(1)',
                 }}
               />
-              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 800 }}>
-                Midnight Forge
+              <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
+                MIDNIGHT FORGE
               </Typography>
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, pr: { md: 4 } }}>
+            <Typography variant="body2" sx={{ lineHeight: 1.6, pr: { md: 4 }, color: 'rgba(255, 255, 255, 0.7)' }}>
               A decentralized software contribution marketplace built on Midnight Network. Publish repositories,
               collaborate on GitHub, and earn verified on-chain rewards.
             </Typography>
@@ -43,7 +44,7 @@ export const Footer: React.FC = () => {
 
           {/* Column 2: Platform Links */}
           <Grid size={{ xs: 6, sm: 3, md: 2 }}>
-            <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
               Marketplace
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
@@ -64,7 +65,7 @@ export const Footer: React.FC = () => {
 
           {/* Column 3: Resources */}
           <Grid size={{ xs: 6, sm: 3, md: 3 }}>
-            <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
               Explorers & Resources
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
@@ -74,9 +75,9 @@ export const Footer: React.FC = () => {
                 rel="noopener noreferrer"
                 color="inherit"
                 underline="hover"
-                sx={{ fontSize: '0.875rem', color: '#60A5FA' }}
+                sx={{ fontSize: '0.875rem', fontFamily: 'monospace' }}
               >
-                1AM Block Explorer
+                1AM Block Explorer ↗
               </Link>
               <Link
                 href="https://explorer.preprod.midnight.network/"
@@ -84,9 +85,9 @@ export const Footer: React.FC = () => {
                 rel="noopener noreferrer"
                 color="inherit"
                 underline="hover"
-                sx={{ fontSize: '0.875rem', color: '#10B981' }}
+                sx={{ fontSize: '0.875rem', fontFamily: 'monospace' }}
               >
-                Midnight Explorer (Preprod)
+                Midnight Explorer (Preprod) ↗
               </Link>
               <Link href="/feedback" color="inherit" underline="hover" sx={{ fontSize: '0.875rem' }}>
                 Provide Feedback
@@ -99,14 +100,14 @@ export const Footer: React.FC = () => {
                 underline="hover"
                 sx={{ fontSize: '0.875rem' }}
               >
-                Midnight Network Docs
+                Midnight Network Docs ↗
               </Link>
             </Box>
           </Grid>
 
           {/* Column 4: Community */}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
               Ecosystem
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -117,23 +118,24 @@ export const Footer: React.FC = () => {
                 <LanguageIcon fontSize="small" />
               </Link>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
+            <Typography variant="caption" sx={{ display: 'block', lineHeight: 1.5, color: 'rgba(255, 255, 255, 0.5)' }}>
               Built for the Midnight Hackathon & Developer Community.
             </Typography>
           </Grid>
         </Grid>
 
-        <Divider sx={{ borderColor: '#1E2332', mb: 3 }} />
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', mb: 3 }} />
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
             © 2026 Midnight Forge. All rights reserved.
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Powered by <strong>Midnight ZK Protocol</strong> & <strong>1AM Wallet</strong>
+          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+            POWERED BY <strong>MIDNIGHT ZK PROTOCOL</strong> & <strong>1AM WALLET</strong>
           </Typography>
         </Box>
       </Container>
     </Box>
   );
 };
+
