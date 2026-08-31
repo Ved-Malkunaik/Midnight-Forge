@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Paper, Chip, Button, Divider } from '@mui/material';
 import GitHubIcon from '@mui/icons-material/GitHub';
@@ -6,38 +6,45 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CodeIcon from '@mui/icons-material/Code';
-import { mockContributions } from '../data/mockContributions';
 import { useProjects } from '../contexts';
 import { ContributionCard, Footer, EmptyState } from '../components';
+import { dataService } from '../services/dataService';
+import type { Contribution } from '../types/marketplace';
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { projects } = useProjects();
+  const [allContributions, setAllContributions] = useState<Contribution[]>([]);
+
+  useEffect(() => {
+    void dataService.getContributions().then(setAllContributions);
+  }, []);
 
   const project = projects.find((p) => p.projectId === id);
   if (!project) {
     return (
       <EmptyState
-        title="Project Not Found"
-        description="This project is no longer available."
-        actionLabel="Back to Explore"
+        title="PROJECT NOT FOUND"
+        description="This project is no longer available in the marketplace."
+        actionLabel="BACK TO EXPLORE"
         onAction={() => navigate('/explore')}
       />
     );
   }
-  const projectContributions = mockContributions.filter((c) => c.projectId === project.projectId);
+  const projectContributions = allContributions.filter((c) => c.projectId === project.projectId);
+
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Back Link */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate('/explore')}
-          sx={{ color: '#94A3B8', mb: 4, '&:hover': { color: '#F8FAFC' } }}
+          sx={{ color: '#FFFFFF', mb: 4, borderRadius: 0, fontWeight: 700 }}
         >
-          Back to Explore
+          BACK TO EXPLORE
         </Button>
 
         {/* Project Header Banner */}
@@ -45,9 +52,9 @@ export const ProjectDetailsPage: React.FC = () => {
           elevation={0}
           sx={{
             p: { xs: 3, md: 5 },
-            borderRadius: '16px',
-            backgroundColor: '#131620',
-            border: '1px solid #1E2332',
+            borderRadius: 0,
+            backgroundColor: '#000000',
+            border: '1px solid #FFFFFF',
             mb: 5,
           }}
         >
@@ -62,17 +69,18 @@ export const ProjectDetailsPage: React.FC = () => {
             }}
           >
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
                 <Chip
-                  label={project.category}
+                  label={project.category.toUpperCase()}
                   size="small"
                   sx={{
                     height: 22,
-                    fontSize: '0.675rem',
-                    fontWeight: 700,
-                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                    color: '#60A5FA',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    fontSize: '0.625rem',
+                    fontWeight: 800,
+                    backgroundColor: '#000000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFFFFF',
+                    borderRadius: 0,
                   }}
                 />
                 <Chip
@@ -80,18 +88,18 @@ export const ProjectDetailsPage: React.FC = () => {
                   size="small"
                   sx={{
                     height: 22,
-                    fontSize: '0.675rem',
-                    fontWeight: 700,
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    color: '#10B981',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    fontSize: '0.625rem',
+                    fontWeight: 800,
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    borderRadius: 0,
                   }}
                 />
               </Box>
-              <Typography variant="h2" color="text.primary" sx={{ fontWeight: 800, mb: 1 }}>
+              <Typography variant="h2" color="#FFFFFF" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>
                 {project.name}
               </Typography>
-              <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: 700, lineHeight: 1.6 }}>
+              <Typography variant="subtitle1" sx={{ maxWidth: 720, lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.75)' }}>
                 {project.shortDescription}
               </Typography>
             </Box>
@@ -103,9 +111,9 @@ export const ProjectDetailsPage: React.FC = () => {
                 startIcon={<GitHubIcon />}
                 href={project.githubRepository}
                 target="_blank"
-                sx={{ borderColor: '#262D3D', color: '#F8FAFC', fontWeight: 600 }}
+                sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', fontWeight: 800, borderRadius: 0 }}
               >
-                GitHub Repo
+                GITHUB REPO ↗
               </Button>
 
               {project.deploymentUrl && (
@@ -115,9 +123,9 @@ export const ProjectDetailsPage: React.FC = () => {
                   href={project.deploymentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{ borderColor: '#262D3D', color: '#60A5FA', fontWeight: 600 }}
+                  sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', fontWeight: 800, borderRadius: 0 }}
                 >
-                  Live DApp
+                  LIVE DAPP ↗
                 </Button>
               )}
 
@@ -125,48 +133,48 @@ export const ProjectDetailsPage: React.FC = () => {
                 variant="contained"
                 startIcon={<SettingsIcon />}
                 onClick={() => navigate(`/projects/${project.projectId}/manage`)}
-                sx={{ fontWeight: 600 }}
+                sx={{ fontWeight: 800, borderRadius: 0 }}
               >
-                Manage Project
+                MANAGE PROJECT
               </Button>
             </Box>
           </Box>
 
-          <Divider sx={{ borderColor: '#1E2332', my: 3 }} />
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 3 }} />
 
           {/* Quick Stats Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Reward Pool
+              <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                REWARD BOUNTY POOL
               </Typography>
-              <Typography variant="subtitle1" color="#10B981" sx={{ fontWeight: 700 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                 {project.rewardPool}
               </Typography>
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Open Tasks
+              <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                OPEN TASKS
               </Typography>
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                 {project.openTaskCount}
               </Typography>
             </Box>
 
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Completed Tasks
+              <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                COMPLETED TASKS
               </Typography>
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                 {project.completedTaskCount}
               </Typography>
             </Box>
 
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Publisher
+              <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                PUBLISHER WALLET
               </Typography>
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
                 {project.publisherName || project.owner}
               </Typography>
             </Box>
@@ -180,30 +188,32 @@ export const ProjectDetailsPage: React.FC = () => {
             {/* About Project */}
             <Paper
               elevation={0}
-              sx={{ p: 4, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 4, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 2, textTransform: 'uppercase' }}>
                 About Project
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7, mb: 3 }}>
+              <Typography variant="body1" sx={{ lineHeight: 1.7, mb: 3, color: 'rgba(255, 255, 255, 0.8)' }}>
                 {project.fullDescription}
               </Typography>
 
-              <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, mb: 1 }}>
+              <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 800, mb: 1.5, textTransform: 'uppercase' }}>
                 Areas for Improvement & Help Needed:
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {project.improvementAreas.map((area) => (
                   <Chip
                     key={area}
-                    icon={<CodeIcon sx={{ fontSize: '14px !important', color: '#60A5FA' }} />}
+                    icon={<CodeIcon sx={{ fontSize: '14px !important', color: '#FFFFFF' }} />}
                     label={area}
                     size="small"
                     sx={{
-                      backgroundColor: '#1E2332',
-                      color: '#F8FAFC',
-                      fontWeight: 600,
+                      backgroundColor: '#000000',
+                      color: '#FFFFFF',
+                      border: '1px solid #FFFFFF',
+                      fontWeight: 700,
                       fontSize: '0.75rem',
+                      borderRadius: 0,
                     }}
                   />
                 ))}
@@ -212,7 +222,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
             {/* Contribution Opportunities */}
             <Box>
-              <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800, mb: 2.5 }}>
+              <Typography variant="h5" color="#FFFFFF" sx={{ fontWeight: 900, mb: 2.5, textTransform: 'uppercase' }}>
                 Contribution Opportunities ({projectContributions.length})
               </Typography>
 
@@ -224,7 +234,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 </Box>
               ) : (
                 <EmptyState
-                  title="No Open Contribution Tasks"
+                  title="NO OPEN CONTRIBUTION TASKS"
                   description="The project owner has not added any open tasks for this repository yet."
                 />
               )}
@@ -236,9 +246,9 @@ export const ProjectDetailsPage: React.FC = () => {
             {/* Technologies Card */}
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, mb: 2, textTransform: 'uppercase' }}>
                 Technologies & Stack
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -247,10 +257,12 @@ export const ProjectDetailsPage: React.FC = () => {
                     key={tech}
                     label={tech}
                     sx={{
-                      backgroundColor: '#1E2332',
-                      color: '#94A3B8',
-                      fontWeight: 600,
+                      backgroundColor: '#000000',
+                      color: '#FFFFFF',
+                      border: '1px solid rgba(255, 255, 255, 0.4)',
+                      fontWeight: 700,
                       fontSize: '0.75rem',
+                      borderRadius: 0,
                     }}
                   />
                 ))}
@@ -260,22 +272,21 @@ export const ProjectDetailsPage: React.FC = () => {
             {/* Publisher Metadata Card */}
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, mb: 1.5 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, mb: 1.5, textTransform: 'uppercase' }}>
                 Publisher Information
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography variant="body2" sx={{ mb: 1, color: 'rgba(255, 255, 255, 0.8)' }}>
                 Published by <strong>{project.publisherName || 'Project Owner'}</strong>
               </Typography>
               <Typography
                 variant="caption"
-                color="text.secondary"
-                sx={{ fontFamily: 'monospace', display: 'block', mb: 2 }}
+                sx={{ fontFamily: 'monospace', display: 'block', mb: 2, color: 'rgba(255, 255, 255, 0.7)' }}
               >
                 Address: {project.owner}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 Registered on {project.createdAt}
               </Typography>
             </Paper>
@@ -287,3 +298,4 @@ export const ProjectDetailsPage: React.FC = () => {
     </Box>
   );
 };
+

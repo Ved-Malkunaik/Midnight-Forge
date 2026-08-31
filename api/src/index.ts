@@ -19,7 +19,7 @@
  * @packageDocumentation
  */
 
-import { type ContractAddress } from '@midnight-ntwrk/midnight-js-protocol/compact-runtime';
+import { type ContractAddress, toHex } from '@midnight-ntwrk/midnight-js-protocol/compact-runtime';
 import { type Logger } from 'pino';
 import {
   type MidnightForgeContract,
@@ -46,6 +46,16 @@ export interface DeployedMidnightForgeAPI {
     deploymentUrl?: string;
     improvementAreas: string[];
   }): Promise<string>;
+  getProjects?(): Promise<Array<{
+    projectId: string;
+    owner: string;
+    name: string;
+    description: string;
+    githubRepository: string;
+    deploymentUrl: string;
+    improvementAreas: string;
+    createdAt: bigint;
+  }>>;
   post?(message: string): Promise<void>;
   takeDown?(): Promise<void>;
 }
@@ -80,27 +90,84 @@ export class MidnightForgeAPI implements DeployedMidnightForgeAPI {
       BigInt(Date.now()),
     );
 
+    console.log('[TX_TRACE] Step 5 - Transaction Submitted to Ledger. Public TxId:', transaction.public.txId);
+    console.log('[TX_TRACE] Step 6 - Polling Indexer for Block Confirmation & Contract State...');
+
+    let state = await this.providers.publicDataProvider.queryContractState(this.deployedContractAddress);
+    let attempts = 0;
+    const maxAttempts = 15;
+    while (attempts < maxAttempts) {
+      attempts++;
+      if (state && state.data) {
+        const projects = ledger(state.data).projects;
+        if (projects.member(projectId)) {
+          console.log(`[TX_TRACE] Step 7 SUCCESS - Project indexed on attempt ${attempts}!`, {
+            txId: transaction.public.txId,
+            contractAddress: this.deployedContractAddress,
+            projectId: toHex(projectId),
+          });
+          const project = projects.lookup(projectId);
+          if (
+            project.name !== params.name ||
+            project.description !== params.description ||
+            project.githubRepository !== params.githubRepository ||
+            project.deploymentUrl !== (params.deploymentUrl ?? '') ||
+            project.improvementAreas !== params.improvementAreas.join(', ')
+          ) {
+            console.error('[TX_TRACE] Step 7 ERROR - Indexed project payload mismatch!');
+            throw new Error('registerProject was finalized, but the indexed project data does not match the submitted data.');
+          }
+          return transaction.public.txId;
+        }
+      }
+      console.log(`[TX_TRACE] Indexer poll attempt ${attempts}/${maxAttempts}: not indexed yet. Retrying in 3s...`);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      state = await this.providers.publicDataProvider.queryContractState(this.deployedContractAddress);
+    }
+
+    console.error('[TX_TRACE] Step 6 ERROR - Transaction submitted but contract state not updated on indexer after 45s', {
+      txId: transaction.public.txId,
+      contractAddress: this.deployedContractAddress,
+    });
+    throw new Error('registerProject was submitted, but the contract state is not available from the indexer after 45 seconds.');
+  }
+
+  async getProjects(): Promise<Array<{
+    projectId: string;
+    owner: string;
+    name: string;
+    description: string;
+    githubRepository: string;
+    deploymentUrl: string;
+    improvementAreas: string;
+    createdAt: bigint;
+  }>> {
     const state = await this.providers.publicDataProvider.queryContractState(this.deployedContractAddress);
-    if (!state) {
-      throw new Error('registerProject was finalized, but the contract state is not available from the indexer.');
+    if (!state) return [];
+    const projectsMap = ledger(state.data).projects;
+    const result: Array<{
+      projectId: string;
+      owner: string;
+      name: string;
+      description: string;
+      githubRepository: string;
+      deploymentUrl: string;
+      improvementAreas: string;
+      createdAt: bigint;
+    }> = [];
+    for (const [key, proj] of projectsMap) {
+      result.push({
+        projectId: toHex(key),
+        owner: toHex(proj.owner),
+        name: proj.name,
+        description: proj.description,
+        githubRepository: proj.githubRepository,
+        deploymentUrl: proj.deploymentUrl,
+        improvementAreas: proj.improvementAreas,
+        createdAt: proj.createdAt,
+      });
     }
-    const projects = ledger(state.data).projects;
-    if (!projects.member(projectId)) {
-      throw new Error('registerProject was finalized, but the project was not found in the indexed contract state.');
-    }
-
-    const project = projects.lookup(projectId);
-    if (
-      project.name !== params.name ||
-      project.description !== params.description ||
-      project.githubRepository !== params.githubRepository ||
-      project.deploymentUrl !== (params.deploymentUrl ?? '') ||
-      project.improvementAreas !== params.improvementAreas.join(', ')
-    ) {
-      throw new Error('registerProject was finalized, but the indexed project data does not match the submitted data.');
-    }
-
-    return transaction.public.txId;
+    return result;
   }
 
   static async deploy(providers: MidnightForgeProviders, logger?: Logger): Promise<MidnightForgeAPI> {

@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -24,6 +23,7 @@ import { mockContributions } from '../data/mockContributions';
 import { useProjects } from '../contexts';
 import { EmptyState, StatusBadge, Footer } from '../components';
 import type { DifficultyLevel, ContributionStatus } from '../types/marketplace';
+import { dataService } from '../services/dataService';
 import { contractService, type TxProgress } from '../services/contract/contractService';
 
 export const ProjectManagementPage: React.FC = () => {
@@ -41,9 +41,9 @@ export const ProjectManagementPage: React.FC = () => {
   if (!project) {
     return (
       <EmptyState
-        title="Project Not Found"
+        title="PROJECT NOT FOUND"
         description="This project is no longer available."
-        actionLabel="Back to Explore"
+        actionLabel="BACK TO EXPLORE"
         onAction={() => navigate('/explore')}
       />
     );
@@ -69,6 +69,22 @@ export const ProjectManagementPage: React.FC = () => {
         },
         (prog) => setTxProgress(prog),
       );
+
+      const newContrib = {
+        contributionId: `contrib-${Date.now()}`,
+        projectId: project.projectId,
+        projectName: project.name,
+        title: taskTitle.trim(),
+        description: taskDesc.trim(),
+        difficulty: taskDifficulty,
+        rewardAmount: taskReward.trim(),
+        status: 'OPEN' as const,
+        requirements: ['Implement requested changes', 'Submit PR reference for review'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      void dataService.saveContribution(newContrib);
+
       setDialogOpen(false);
       setTaskTitle('');
       setTaskDesc('');
@@ -81,6 +97,11 @@ export const ProjectManagementPage: React.FC = () => {
     try {
       await contractService.markContributionMerged(contribId, (prog) => setTxProgress(prog));
       setTaskStatuses((prev) => ({ ...prev, [contribId]: 'MERGED' }));
+      const all = await dataService.getContributions();
+      const existing = all.find((c) => c.contributionId === contribId);
+      if (existing) {
+        void dataService.saveContribution({ ...existing, status: 'MERGED', updatedAt: new Date().toISOString() });
+      }
     } catch {
       setTxProgress({ step: 'failed' });
     }
@@ -90,21 +111,27 @@ export const ProjectManagementPage: React.FC = () => {
     try {
       await contractService.acceptContribution(contribId, (prog) => setTxProgress(prog));
       setTaskStatuses((prev) => ({ ...prev, [contribId]: 'ACCEPTED' }));
+      const all = await dataService.getContributions();
+      const existing = all.find((c) => c.contributionId === contribId);
+      if (existing) {
+        void dataService.saveContribution({ ...existing, status: 'ACCEPTED', updatedAt: new Date().toISOString() });
+      }
     } catch {
       setTxProgress({ step: 'failed' });
     }
   };
 
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Back Link */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate(`/projects/${project.projectId}`)}
-          sx={{ color: '#94A3B8', mb: 4, '&:hover': { color: '#F8FAFC' } }}
+          sx={{ color: '#FFFFFF', mb: 4, borderRadius: 0, fontWeight: 700 }}
         >
-          Back to Project Details
+          BACK TO PROJECT DETAILS
         </Button>
 
         {/* Page Header */}
@@ -119,13 +146,13 @@ export const ProjectManagementPage: React.FC = () => {
           }}
         >
           <Box>
-            <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
-              PROJECT MANAGEMENT
+            <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
+              PROJECT MANAGEMENT WORKSPACE
             </Typography>
-            <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
+            <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
               {project.name} Workspace
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body1" sx={{ mt: 0.5, color: 'rgba(255, 255, 255, 0.75)' }}>
               Manage task opportunities, review pull request submissions, and release Midnight rewards.
             </Typography>
           </Box>
@@ -134,18 +161,18 @@ export const ProjectManagementPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setDialogOpen(true)}
-            sx={{ fontWeight: 700, px: 3, py: 1.2 }}
+            sx={{ fontWeight: 800, px: 3, py: 1.2, borderRadius: 0 }}
           >
-            Create Opportunity
+            CREATE OPPORTUNITY
           </Button>
         </Box>
 
         {/* Contribution Opportunities List */}
         <Paper
           elevation={0}
-          sx={{ p: 4, borderRadius: '16px', backgroundColor: '#131620', border: '1px solid #1E2332', mb: 5 }}
+          sx={{ p: 4, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF', mb: 5 }}
         >
-          <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 3 }}>
+          <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 3, textTransform: 'uppercase' }}>
             Active Tasks & Pull Requests ({mockContributions.length})
           </Typography>
 
@@ -159,9 +186,9 @@ export const ProjectManagementPage: React.FC = () => {
                   elevation={0}
                   sx={{
                     p: 3,
-                    borderRadius: '10px',
-                    backgroundColor: '#0F121C',
-                    border: '1px solid #1E2332',
+                    borderRadius: 0,
+                    backgroundColor: '#000000',
+                    border: '1px solid #FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justify: 'space-between',
@@ -170,11 +197,11 @@ export const ProjectManagementPage: React.FC = () => {
                   }}
                 >
                   <Box>
-                    <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+                    <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                       {task.title}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      Difficulty: {task.difficulty} • Predefined Reward: {task.rewardAmount}
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'rgba(255, 255, 255, 0.6)' }}>
+                      Difficulty: {task.difficulty} • Bounty: {task.rewardAmount}
                     </Typography>
                   </Box>
 
@@ -187,9 +214,9 @@ export const ProjectManagementPage: React.FC = () => {
                         size="small"
                         startIcon={<MergeTypeIcon />}
                         onClick={() => void handleMarkMerged(task.contributionId)}
-                        sx={{ borderColor: '#38BDF8', color: '#38BDF8' }}
+                        sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                       >
-                        Mark Merged
+                        MARK MERGED
                       </Button>
                     )}
 
@@ -197,11 +224,11 @@ export const ProjectManagementPage: React.FC = () => {
                       <Button
                         variant="contained"
                         size="small"
-                        color="success"
                         startIcon={<VerifiedIcon />}
                         onClick={() => void handleAcceptContribution(task.contributionId)}
+                        sx={{ borderRadius: 0, fontWeight: 800 }}
                       >
-                        Accept Contribution
+                        ACCEPT CONTRIBUTION
                       </Button>
                     )}
 
@@ -209,9 +236,9 @@ export const ProjectManagementPage: React.FC = () => {
                       variant="outlined"
                       size="small"
                       onClick={() => navigate(`/contributions/${task.contributionId}`)}
-                      sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}
+                      sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                     >
-                      Manage Task
+                      MANAGE TASK
                     </Button>
                   </Box>
                 </Paper>
@@ -222,8 +249,8 @@ export const ProjectManagementPage: React.FC = () => {
 
         {/* Create Opportunity Dialog */}
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ fontWeight: 700 }}>Create Contribution Opportunity</DialogTitle>
-          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+          <DialogTitle sx={{ fontWeight: 900, color: '#FFFFFF', textTransform: 'uppercase' }}>Create Contribution Opportunity</DialogTitle>
+          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1, backgroundColor: '#000000' }}>
             <TextField
               label="Task Title *"
               placeholder="e.g. Add ZK Proof Verification Circuit"
@@ -263,22 +290,22 @@ export const ProjectManagementPage: React.FC = () => {
               />
             </Box>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button onClick={() => setDialogOpen(false)} sx={{ color: '#94A3B8' }}>
-              Cancel
+          <DialogActions sx={{ px: 3, pb: 3, backgroundColor: '#000000' }}>
+            <Button onClick={() => setDialogOpen(false)} sx={{ color: '#FFFFFF', borderRadius: 0 }}>
+              CANCEL
             </Button>
-            <Button variant="contained" onClick={() => void handleCreateTask()} startIcon={<CheckCircleIcon />}>
-              Create Task
+            <Button variant="contained" onClick={() => void handleCreateTask()} startIcon={<CheckCircleIcon />} sx={{ borderRadius: 0, fontWeight: 800 }}>
+              CREATE TASK
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Transaction Progress Dialog */}
         <Dialog open={txProgress.step !== 'idle' && txProgress.step !== 'confirmed' && txProgress.step !== 'failed'}>
-          <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Executing Midnight Transaction</DialogTitle>
-          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320 }}>
-            <CircularProgress size={48} sx={{ color: '#3B82F6', mb: 3 }} />
-            <Typography variant="body1" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
+          <DialogTitle sx={{ fontWeight: 900, textAlign: 'center', color: '#FFFFFF', textTransform: 'uppercase' }}>Executing Midnight Transaction</DialogTitle>
+          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320, backgroundColor: '#000000' }}>
+            <CircularProgress size={48} sx={{ color: '#FFFFFF', mb: 3 }} />
+            <Typography variant="body1" color="#FFFFFF" sx={{ fontWeight: 700, mb: 1 }}>
               {txProgress.message || 'Processing...'}
             </Typography>
           </DialogContent>
@@ -289,3 +316,4 @@ export const ProjectManagementPage: React.FC = () => {
     </Box>
   );
 };
+

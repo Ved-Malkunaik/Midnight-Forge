@@ -28,7 +28,7 @@ export interface Contribution {
   contributionId: string;
   projectId: string;
   projectName: string;
-  creator: string;
+  creator?: string;
   title: string;
   description: string;
   requirements: string[];
@@ -36,11 +36,36 @@ export interface Contribution {
   rewardAmount: string;
   status: ContributionStatus;
   claimedBy?: string;
+  claimedByWallet?: string;
   claimedAt?: string;
   githubIssueUrl?: string;
   githubPrUrl?: string;
+  prUrl?: string;
+  prNumber?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Opportunity {
+  opportunityId: string;
+  projectId: string;
+  title: string;
+  description: string;
+  difficulty: DifficultyLevel;
+  bountyAmount: string;
+  status: 'ACTIVE' | 'CLOSED';
+  createdAt: string;
+}
+
+export interface RewardTransaction {
+  rewardId: string;
+  contributionId: string;
+  publisherWallet: string;
+  contributorWallet: string;
+  amount: string;
+  status: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  txHash: string;
+  confirmedAt: string;
 }
 
 export interface ProjectFilters {
@@ -50,3 +75,4 @@ export interface ProjectFilters {
   status: string;
   sortBy: 'newest' | 'reward' | 'tasks';
 }
+

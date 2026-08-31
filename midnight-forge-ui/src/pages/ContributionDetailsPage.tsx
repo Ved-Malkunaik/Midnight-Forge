@@ -32,6 +32,8 @@ import { useWallet } from '../hooks/useWallet';
 import { contractService, type TxProgress, type RewardReleaseResult } from '../services/contract/contractService';
 import { githubSyncService, type GitHubPRStatus } from '../../../api/src/services/githubSync';
 import { getOneAmExplorerTxUrl, getMidnightExplorerTxUrl } from '../utils/explorer';
+import { dataService } from '../services/dataService';
+import type { Contribution } from '../types/marketplace';
 
 const lifecycleSteps = [
   { id: 'OPEN', label: 'Open' },
@@ -47,6 +49,9 @@ export const ContributionDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, account, connect } = useWallet();
 
+  const [currentContribution, setCurrentContribution] = useState<Contribution>(() => {
+    return mockContributions.find((c) => c.contributionId === id) || mockContributions[0];
+  });
   const [localStatus, setLocalStatus] = useState<
     'OPEN' | 'CLAIMED' | 'PR_SUBMITTED' | 'MERGED' | 'ACCEPTED' | 'REWARDED'
   >('OPEN');
@@ -54,11 +59,17 @@ export const ContributionDetailsPage: React.FC = () => {
   const [txProgress, setTxProgress] = useState<TxProgress>({ step: 'idle' });
   const [rewardResult, setRewardResult] = useState<RewardReleaseResult | null>(null);
 
-  const contribution = mockContributions.find((c) => c.contributionId === id) || mockContributions[0];
-
   useEffect(() => {
-    setLocalStatus(contribution.status);
-  }, [contribution]);
+    void dataService.getContributions().then((all) => {
+      const found = all.find((c) => c.contributionId === id);
+      if (found) {
+        setCurrentContribution(found);
+        setLocalStatus(found.status);
+      }
+    });
+  }, [id]);
+
+  const contribution = currentContribution;
 
   // Realtime / Near-realtime GitHub PR Status State
   const [githubPrInfo, setGithubPrInfo] = useState<GitHubPRStatus>(() =>
@@ -81,6 +92,14 @@ export const ContributionDetailsPage: React.FC = () => {
     try {
       await contractService.claimContribution(contribution.contributionId, (prog) => setTxProgress(prog));
       setLocalStatus('CLAIMED');
+      const updated = {
+        ...contribution,
+        status: 'CLAIMED' as const,
+        claimedAt: new Date().toISOString(),
+        claimedByWallet: account?.address || '1AM Connected Wallet',
+      };
+      setCurrentContribution(updated);
+      void dataService.saveContribution(updated);
     } catch (err) {
       setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'Claim failed' });
     }
@@ -93,6 +112,14 @@ export const ContributionDetailsPage: React.FC = () => {
         setTxProgress(prog),
       );
       setLocalStatus('PR_SUBMITTED');
+      const updated = {
+        ...contribution,
+        status: 'PR_SUBMITTED' as const,
+        prUrl: prReferenceInput.startsWith('http') ? prReferenceInput : `https://github.com/midnight-ntwrk/repository/pull/${prReferenceInput.replace(/[^0-9]/g, '')}`,
+        updatedAt: new Date().toISOString(),
+      };
+      setCurrentContribution(updated);
+      void dataService.saveContribution(updated);
     } catch (err) {
       setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'PR submission failed' });
     }
@@ -100,7 +127,7 @@ export const ContributionDetailsPage: React.FC = () => {
 
   const handleReleaseReward = async () => {
     try {
-      const recipient = account?.address || 'mn1a_contributor_preprod_89ef';
+      const recipient = account?.address || contribution.claimedByWallet || 'mn1a_contributor_preprod_89ef';
       const result = await contractService.releaseReward(
         contribution.contributionId,
         contribution.rewardAmount,
@@ -109,21 +136,40 @@ export const ContributionDetailsPage: React.FC = () => {
       );
       setRewardResult(result);
       setLocalStatus('REWARDED');
+
+      const updated = {
+        ...contribution,
+        status: 'REWARDED' as const,
+        updatedAt: new Date().toISOString(),
+      };
+      setCurrentContribution(updated);
+      void dataService.saveContribution(updated);
+      void dataService.saveReward({
+        rewardId: `reward-${Date.now()}`,
+        contributionId: contribution.contributionId,
+        publisherWallet: account?.address || 'Publisher Wallet',
+        contributorWallet: recipient,
+        amount: contribution.rewardAmount,
+        status: 'CONFIRMED',
+        txHash: result.txHash,
+        confirmedAt: new Date().toISOString(),
+      });
     } catch (err) {
       setTxProgress({ step: 'failed', error: err instanceof Error ? err.message : 'Reward release failed' });
     }
   };
 
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Back Link */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate('/explore')}
-          sx={{ color: '#94A3B8', mb: 4, '&:hover': { color: '#F8FAFC' } }}
+          sx={{ color: '#FFFFFF', mb: 4, borderRadius: 0, fontWeight: 700 }}
         >
-          Back to Explore
+          BACK TO EXPLORE
         </Button>
 
         {/* Header Card */}
@@ -131,9 +177,9 @@ export const ContributionDetailsPage: React.FC = () => {
           elevation={0}
           sx={{
             p: { xs: 3, md: 5 },
-            borderRadius: '16px',
-            backgroundColor: '#131620',
-            border: '1px solid #1E2332',
+            borderRadius: 0,
+            backgroundColor: '#000000',
+            border: '1px solid #FFFFFF',
             mb: 5,
           }}
         >
@@ -148,17 +194,17 @@ export const ContributionDetailsPage: React.FC = () => {
             }}
           >
             <Box>
-              <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.04em' }}>
-                {contribution.projectName}
+              <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.08em', color: 'rgba(255, 255, 255, 0.6)' }}>
+                {contribution.projectName.toUpperCase()}
               </Typography>
-              <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
+              <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
                 {contribution.title}
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <StatusBadge status={localStatus} size="medium" />
-              <Typography variant="h5" color="#10B981" sx={{ fontWeight: 800 }}>
+              <Typography variant="h5" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                 {contribution.rewardAmount}
               </Typography>
             </Box>
@@ -166,7 +212,7 @@ export const ContributionDetailsPage: React.FC = () => {
 
           {/* Visual Lifecycle Progression Bar */}
           <Box sx={{ my: 4, pt: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, display: 'block', mb: 2 }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, display: 'block', mb: 2, color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.08em' }}>
               MIDNIGHT CONTRACT LIFECYCLE PROGRESS
             </Typography>
 
@@ -186,19 +232,23 @@ export const ContributionDetailsPage: React.FC = () => {
                     key={step.id}
                     sx={{
                       p: 1.5,
-                      borderRadius: '8px',
+                      borderRadius: 0,
                       textAlign: 'center',
-                      backgroundColor: isCurrent ? 'rgba(59, 130, 246, 0.15)' : isPassed ? '#1E2332' : '#0B0C10',
-                      border: '1px solid',
-                      borderColor: isCurrent ? '#3B82F6' : isPassed ? 'rgba(59, 130, 246, 0.3)' : '#1E2332',
+                      backgroundColor: isCurrent ? '#FFFFFF' : '#000000',
+                      color: isCurrent ? '#000000' : '#FFFFFF',
+                      border: '1px solid #FFFFFF',
                     }}
                   >
                     <Typography
                       variant="caption"
-                      color={isCurrent ? '#60A5FA' : isPassed ? '#F8FAFC' : '#94A3B8'}
-                      sx={{ fontWeight: isCurrent ? 700 : 500, display: 'block' }}
+                      sx={{
+                        fontWeight: 900,
+                        display: 'block',
+                        color: isCurrent ? '#000000' : isPassed ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)',
+                        fontSize: '0.75rem',
+                      }}
                     >
-                      {step.label}
+                      {step.label.toUpperCase()}
                     </Typography>
                   </Box>
                 );
@@ -206,7 +256,7 @@ export const ContributionDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Divider sx={{ borderColor: '#1E2332', my: 3 }} />
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 3 }} />
 
           {/* Primary Action Button Bar */}
           <Box
@@ -218,9 +268,9 @@ export const ContributionDetailsPage: React.FC = () => {
                 size="large"
                 onClick={() => void handleClaimClick()}
                 startIcon={!isConnected ? <AccountBalanceWalletIcon /> : undefined}
-                sx={{ px: 4, py: 1.2, fontWeight: 700 }}
+                sx={{ px: 4, py: 1.2, fontWeight: 800, borderRadius: 0 }}
               >
-                {isConnected ? 'Claim Contribution' : 'Connect Wallet to Claim'}
+                {isConnected ? 'CLAIM CONTRIBUTION' : 'CONNECT WALLET TO CLAIM'}
               </Button>
             )}
 
@@ -236,9 +286,9 @@ export const ContributionDetailsPage: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={() => void handleSubmitPRReference()}
-                  sx={{ px: 3, fontWeight: 700 }}
+                  sx={{ px: 3, fontWeight: 800, borderRadius: 0 }}
                 >
-                  Submit PR Reference
+                  SUBMIT PR REFERENCE
                 </Button>
               </Box>
             )}
@@ -246,13 +296,12 @@ export const ContributionDetailsPage: React.FC = () => {
             {localStatus === 'ACCEPTED' && (
               <Button
                 variant="contained"
-                color="success"
                 size="large"
                 startIcon={<MonetizationOnIcon />}
                 onClick={() => void handleReleaseReward()}
-                sx={{ px: 4, py: 1.2, fontWeight: 800 }}
+                sx={{ px: 4, py: 1.2, fontWeight: 900, borderRadius: 0 }}
               >
-                Authorize & Release Reward ({contribution.rewardAmount})
+                CONFIRM & RELEASE REWARD ({contribution.rewardAmount})
               </Button>
             )}
 
@@ -261,15 +310,15 @@ export const ContributionDetailsPage: React.FC = () => {
                 sx={{
                   width: '100%',
                   p: 2.5,
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: 0,
+                  backgroundColor: '#000000',
+                  border: '1px solid #FFFFFF',
                 }}
               >
-                <Typography variant="body1" color="#10B981" sx={{ fontWeight: 700, mb: 1 }}>
-                  Reward Released Successfully!
+                <Typography variant="body1" color="#FFFFFF" sx={{ fontWeight: 800, mb: 1, textTransform: 'uppercase' }}>
+                  ✓ Reward Released Successfully!
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2 }}>
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2, color: 'rgba(255, 255, 255, 0.8)' }}>
                   Tx Reference: {rewardResult.txHash}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
@@ -280,9 +329,9 @@ export const ContributionDetailsPage: React.FC = () => {
                     href={getOneAmExplorerTxUrl(rewardResult.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{ borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60A5FA', '&:hover': { borderColor: '#3B82F6' } }}
+                    sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                   >
-                    Track on 1AM Explorer
+                    1AM BLOCK EXPLORER ↗
                   </Button>
                   <Button
                     variant="outlined"
@@ -291,9 +340,9 @@ export const ContributionDetailsPage: React.FC = () => {
                     href={getMidnightExplorerTxUrl(rewardResult.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{ borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10B981', '&:hover': { borderColor: '#10B981' } }}
+                    sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                   >
-                    Track on Midnight Explorer (Preprod)
+                    MIDNIGHT EXPLORER (PREPROD) ↗
                   </Button>
                 </Box>
               </Box>
@@ -307,12 +356,12 @@ export const ContributionDetailsPage: React.FC = () => {
             {/* Realtime GitHub Status Box */}
             <Paper
               elevation={0}
-              sx={{ p: 3.5, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #262D3D' }}
+              sx={{ p: 3.5, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <GitHubIcon sx={{ color: '#94A3B8' }} />
-                  <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
+                  <GitHubIcon sx={{ color: '#FFFFFF' }} />
+                  <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                     Realtime GitHub PR Tracker
                   </Typography>
                 </Box>
@@ -320,9 +369,9 @@ export const ContributionDetailsPage: React.FC = () => {
                   size="small"
                   startIcon={<RefreshIcon fontSize="small" />}
                   onClick={handleRefreshPRStatus}
-                  sx={{ color: '#94A3B8' }}
+                  sx={{ color: '#FFFFFF', border: '1px solid #FFFFFF', borderRadius: 0, fontWeight: 700 }}
                 >
-                  Sync Now
+                  SYNC NOW
                 </Button>
               </Box>
 
@@ -332,50 +381,53 @@ export const ContributionDetailsPage: React.FC = () => {
                   gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
                   gap: 2,
                   p: 2,
-                  backgroundColor: '#0B0C10',
-                  borderRadius: '8px',
+                  backgroundColor: '#000000',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: 0,
                   mb: 2,
                 }}
               >
                 <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Repository
+                  <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                    REPOSITORY
                   </Typography>
-                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                  <Typography variant="body2" color="#FFFFFF" sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
                     {githubPrInfo.repoName}
                   </Typography>
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    GitHub PR Status
+                  <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700, mb: 0.5 }}>
+                    GITHUB PR STATUS
                   </Typography>
                   <Chip
                     label={githubPrInfo.githubState}
                     size="small"
                     sx={{
-                      fontWeight: 700,
-                      backgroundColor: githubPrInfo.isMerged ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                      color: githubPrInfo.isMerged ? '#10B981' : '#60A5FA',
+                      fontWeight: 800,
+                      backgroundColor: '#000000',
+                      color: '#FFFFFF',
+                      border: '1px solid #FFFFFF',
+                      borderRadius: 0,
                     }}
                   />
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Pull Request Link
+                  <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                    PULL REQUEST LINK
                   </Typography>
                   <Button
                     size="small"
                     endIcon={<OpenInNewIcon fontSize="small" />}
                     href={githubPrInfo.htmlUrl}
                     target="_blank"
-                    sx={{ p: 0, color: '#60A5FA' }}
+                    sx={{ p: 0, color: '#FFFFFF', fontFamily: 'monospace', fontWeight: 800 }}
                   >
-                    PR #{githubPrInfo.prNumber}
+                    PR #{githubPrInfo.prNumber} ↗
                   </Button>
                 </Box>
               </Box>
 
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 Last synchronized via GitHub API & Webhooks: {new Date(githubPrInfo.lastSyncedAt).toLocaleTimeString()}
               </Typography>
             </Paper>
@@ -383,28 +435,28 @@ export const ContributionDetailsPage: React.FC = () => {
             {/* Task Description */}
             <Paper
               elevation={0}
-              sx={{ p: 4, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 4, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 2, textTransform: 'uppercase' }}>
                 Task Description
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7, mb: 3 }}>
+              <Typography variant="body1" sx={{ lineHeight: 1.7, mb: 3, color: 'rgba(255, 255, 255, 0.8)' }}>
                 {contribution.description}
               </Typography>
 
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, mb: 1.5 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 800, mb: 1.5, textTransform: 'uppercase' }}>
                 Requirements & Acceptance Criteria:
               </Typography>
 
               <List disablePadding>
-                {contribution.requirements.map((req, idx) => (
+                {contribution.requirements.map((req: string, idx: number) => (
                   <ListItem key={idx} disablePadding sx={{ mb: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 32, color: '#3B82F6' }}>
+                    <ListItemIcon sx={{ minWidth: 32, color: '#FFFFFF' }}>
                       <CheckCircleOutlinedIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText
                       primary={req}
-                      slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }}
+                      slotProps={{ primary: { variant: 'body2', color: 'rgba(255, 255, 255, 0.8)' } }}
                     />
                   </ListItem>
                 ))}
@@ -416,34 +468,34 @@ export const ContributionDetailsPage: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 900, mb: 2, textTransform: 'uppercase' }}>
                 Opportunity Overview
               </Typography>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Difficulty
+                  <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                    DIFFICULTY
                   </Typography>
                   <Chip
-                    label={contribution.difficulty}
+                    label={contribution.difficulty.toUpperCase()}
                     size="small"
-                    sx={{ mt: 0.5, fontWeight: 700, backgroundColor: '#1E2332', color: '#60A5FA' }}
+                    sx={{ mt: 0.5, fontWeight: 800, backgroundColor: '#000000', color: '#FFFFFF', border: '1px solid #FFFFFF', borderRadius: 0 }}
                   />
                 </Box>
 
                 <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Predefined Reward
+                  <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                    PREDEFINED BOUNTY
                   </Typography>
-                  <Typography variant="subtitle2" color="#10B981" sx={{ fontWeight: 700 }}>
+                  <Typography variant="subtitle2" color="#FFFFFF" sx={{ fontWeight: 900, fontFamily: 'monospace' }}>
                     {contribution.rewardAmount}
                   </Typography>
                 </Box>
 
-                <Divider sx={{ borderColor: '#1E2332' }} />
+                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
 
                 {contribution.githubIssueUrl && (
                   <Button
@@ -451,9 +503,9 @@ export const ContributionDetailsPage: React.FC = () => {
                     startIcon={<GitHubIcon />}
                     href={contribution.githubIssueUrl}
                     target="_blank"
-                    sx={{ borderColor: '#262D3D', color: '#F8FAFC', fontWeight: 600 }}
+                    sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', fontWeight: 800, borderRadius: 0 }}
                   >
-                    View GitHub Issue
+                    VIEW GITHUB ISSUE ↗
                   </Button>
                 )}
               </Box>
@@ -463,16 +515,16 @@ export const ContributionDetailsPage: React.FC = () => {
 
         {/* Transaction Progress Dialog */}
         <Dialog open={txProgress.step !== 'idle' && txProgress.step !== 'confirmed' && txProgress.step !== 'failed'}>
-          <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Executing Midnight Transaction</DialogTitle>
-          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320 }}>
-            <CircularProgress size={48} sx={{ color: '#3B82F6', mb: 3 }} />
-            <Typography variant="body1" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
+          <DialogTitle sx={{ fontWeight: 900, textAlign: 'center', color: '#FFFFFF', textTransform: 'uppercase' }}>Executing Midnight Transaction</DialogTitle>
+          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320, backgroundColor: '#000000' }}>
+            <CircularProgress size={48} sx={{ color: '#FFFFFF', mb: 3 }} />
+            <Typography variant="body1" color="#FFFFFF" sx={{ fontWeight: 700, mb: 1 }}>
               {txProgress.message || 'Processing...'}
             </Typography>
 
             {txProgress.txHash && (
-              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#0B0C10', borderRadius: '6px' }}>
-                <Typography variant="caption" color="#60A5FA" sx={{ fontFamily: 'monospace' }}>
+              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#000000', border: '1px solid #FFFFFF', borderRadius: 0 }}>
+                <Typography variant="caption" color="#FFFFFF" sx={{ fontFamily: 'monospace' }}>
                   Tx: {txProgress.txHash.slice(0, 16)}...
                 </Typography>
               </Box>
@@ -485,3 +537,4 @@ export const ContributionDetailsPage: React.FC = () => {
     </Box>
   );
 };
+
