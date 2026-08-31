@@ -12,7 +12,7 @@ export const config: AppConfig = {
   contractAddress:
     (import.meta.env.VITE_MIDNIGHT_FORGE_CONTRACT_ADDRESS as string) ||
     '0200546febbb7a49324ecd734514cb7df13986d4c7ac5bef1860639087892788ab5e',
-  apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:3001',
+  apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string) || (typeof window !== 'undefined' ? window.location.origin : ''),
   googleFormUrl:
     (import.meta.env.VITE_GOOGLE_FORM_URL as string) ||
     'https://docs.google.com/forms/d/e/1FAIpQLSc_midnight_forge_feedback/viewform',
