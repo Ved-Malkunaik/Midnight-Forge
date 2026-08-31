@@ -361,9 +361,18 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
       },
       balanceTx: async (tx: UnboundTransaction, ttl?: Date): Promise<FinalizedTransaction> => {
         try {
+          console.log('[TX_TRACE] Step 1 - Requesting 1AM Balance:', {
+            contractAddress: getContractAddress(),
+            networkId: getNetworkId(),
+            coinPublicKey: shieldedAddresses.shieldedCoinPublicKey,
+          });
           logger.info({ tx, ttl }, 'Balancing transaction via wallet');
           const serializedTx = toHex(tx.serialize());
           const received = await connectedAPI.balanceUnsealedTransaction(serializedTx);
+          console.log('[TX_TRACE] Step 2 - 1AM Balance Response Received:', {
+            hasTx: Boolean(received?.tx),
+            txLength: received?.tx?.length,
+          });
           return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
             'signature',
             'proof',
@@ -371,6 +380,7 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
             fromHex(received.tx),
           );
         } catch (e) {
+          console.error('[TX_TRACE] Step 2 ERROR - 1AM Balance Failed:', e);
           logger.error({ error: e }, 'Error balancing transaction via wallet');
           throw e;
         }
@@ -378,12 +388,27 @@ const initializeProviders = async (logger: Logger): Promise<BBoardProviders> => 
     },
     midnightProvider: {
       submitTx: async (tx: FinalizedTransaction): Promise<TransactionId> => {
-        const submittedTxId: unknown = await connectedAPI.submitTransaction(toHex(tx.serialize()));
-        const txIdentifiers = tx.identifiers();
-        const rawId = String(submittedTxId ?? '').trim();
-        const txId = (rawId.length > 0 ? rawId : txIdentifiers[0]) as TransactionId;
-        logger.info({ txIdentifiers, submittedTxId, txId }, 'Submitted transaction via 1AM wallet');
-        return txId;
+        try {
+          const txIdentifiers = tx.identifiers();
+          const serializedHex = toHex(tx.serialize());
+          console.log('[TX_TRACE] Step 3 - Submitting Tx to 1AM Wallet Node:', {
+            txIdentifiers,
+            serializedLength: serializedHex.length,
+          });
+          const submittedTxId: unknown = await connectedAPI.submitTransaction(serializedHex);
+          const rawId = String(submittedTxId ?? '').trim();
+          const txId = (rawId.length > 0 ? rawId : txIdentifiers[0]) as TransactionId;
+          console.log('[TX_TRACE] Step 4 - Submit Tx Completed:', {
+            submittedTxId,
+            txIdentifiers,
+            resolvedTxId: txId,
+          });
+          logger.info({ txIdentifiers, submittedTxId, txId }, 'Submitted transaction via 1AM wallet');
+          return txId;
+        } catch (e) {
+          console.error('[TX_TRACE] Step 3 ERROR - Submit Tx Failed:', e);
+          throw e;
+        }
       },
     },
   };

@@ -34,7 +34,7 @@ const categories = ['DApps', 'Core Protocol', 'Tooling & CLI', 'SDK & Libraries'
 export const PublishProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, connect, account } = useWallet();
-  const { addProject } = useProjects();
+  const { addProject, refreshProjects } = useProjects();
 
   const [name, setName] = useState('');
   const [shortDesc, setShortDesc] = useState('');
@@ -83,7 +83,7 @@ export const PublishProjectPage: React.FC = () => {
         }
         setDeploymentUrl(parsedDeploymentUrl.toString().replace(/\/$/, ''));
       } catch {
-        setErrorMsg('Please enter a valid live app URL, such as stellar-poll-ochre.vercel.app.');
+        setErrorMsg('Please enter a valid live app URL.');
         return;
       }
     }
@@ -130,6 +130,7 @@ export const PublishProjectPage: React.FC = () => {
         completedTaskCount: 0,
       };
       addProject(publishedProject);
+      void refreshProjects();
       setTxProgress({ step: 'confirmed', txHash, message: 'Project registered successfully on-chain!' });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed on Midnight Network.';
@@ -139,27 +140,27 @@ export const PublishProjectPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="md" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Back Link */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate('/explore')}
-          sx={{ color: '#94A3B8', mb: 4, '&:hover': { color: '#F8FAFC' } }}
+          sx={{ color: '#FFFFFF', mb: 4, borderRadius: 0, fontWeight: 700 }}
         >
-          Back to Explore
+          BACK TO EXPLORE
         </Button>
 
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
             PUBLISHER PORTAL
           </Typography>
-          <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
+          <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
             Publish a New Project
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-            Register your open-source repository on Midnight Network via `registerProject()` contract circuit.
+          <Typography variant="body1" sx={{ mt: 1, color: 'rgba(255, 255, 255, 0.75)' }}>
+            Register your software repository on Midnight Network to create active contribution opportunities with NIGHT token bounties.
           </Typography>
         </Box>
 
@@ -168,13 +169,13 @@ export const PublishProjectPage: React.FC = () => {
           <Alert
             severity="warning"
             action={
-              <Button color="inherit" size="small" onClick={() => void connect()}>
-                Connect 1AM Wallet
+              <Button color="inherit" size="small" onClick={() => void connect()} sx={{ borderRadius: 0, fontWeight: 800 }}>
+                CONNECT 1AM WALLET
               </Button>
             }
-            sx={{ mb: 4, borderRadius: '8px' }}
+            sx={{ mb: 4, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF', color: '#FFFFFF' }}
           >
-            You are browsing anonymously. Connecting a 1AM wallet is required before finalizing publication.
+            Connecting a 1AM wallet is required before finalizing project publication on Midnight Preprod.
           </Alert>
         )}
 
@@ -184,25 +185,25 @@ export const PublishProjectPage: React.FC = () => {
             sx={{
               p: 6,
               textAlign: 'center',
-              borderRadius: '16px',
-              backgroundColor: '#131620',
-              border: '1px solid #10B981',
+              borderRadius: 0,
+              backgroundColor: '#000000',
+              border: '1px solid #FFFFFF',
             }}
           >
-            <CheckCircleIcon sx={{ fontSize: 56, color: '#10B981', mb: 2 }} />
-            <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mb: 1 }}>
+            <CheckCircleIcon sx={{ fontSize: 56, color: '#FFFFFF', mb: 2 }} />
+            <Typography variant="h4" color="#FFFFFF" sx={{ fontWeight: 900, mb: 1, textTransform: 'uppercase' }}>
               Project Published & Confirmed On-Chain!
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2, maxWidth: 500, mx: 'auto' }}>
+            <Typography variant="body1" sx={{ mb: 3, maxWidth: 540, mx: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}>
               Your repository <strong>{name}</strong> is now registered on Midnight Forge Preprod.
             </Typography>
 
             {txProgress.txHash && (
-              <Box sx={{ mb: 4, p: 3, backgroundColor: '#0B0C10', borderRadius: '12px', border: '1px solid #1E2332' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 700 }}>
+              <Box sx={{ mb: 4, p: 3, backgroundColor: '#000000', borderRadius: 0, border: '1px solid #FFFFFF' }}>
+                <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>
                   MIDNIGHT TRANSACTION REFERENCE
                 </Typography>
-                <Typography variant="body2" color="#60A5FA" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2 }}>
+                <Typography variant="body2" color="#FFFFFF" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mb: 2, fontWeight: 700 }}>
                   {txProgress.txHash}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap', mt: 2 }}>
@@ -213,9 +214,9 @@ export const PublishProjectPage: React.FC = () => {
                     href={getOneAmExplorerTxUrl(txProgress.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{ borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60A5FA', '&:hover': { borderColor: '#3B82F6' } }}
+                    sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                   >
-                    Track on 1AM Explorer
+                    1AM BLOCK EXPLORER ↗
                   </Button>
                   <Button
                     variant="outlined"
@@ -224,24 +225,24 @@ export const PublishProjectPage: React.FC = () => {
                     href={getMidnightExplorerTxUrl(txProgress.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{ borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10B981', '&:hover': { borderColor: '#10B981' } }}
+                    sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                   >
-                    Track on Midnight Explorer (Preprod)
+                    MIDNIGHT EXPLORER (PREPROD) ↗
                   </Button>
                 </Box>
               </Box>
             )}
 
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-              <Button variant="contained" onClick={() => navigate('/explore')}>
-                View in Marketplace
+              <Button variant="contained" onClick={() => navigate('/explore')} sx={{ borderRadius: 0, fontWeight: 800 }}>
+                VIEW IN MARKETPLACE
               </Button>
               <Button
                 variant="outlined"
                 onClick={() => navigate('/dashboard/projects')}
-                sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}
+                sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
               >
-                Go to Publisher Dashboard
+                GO TO PUBLISHER HUB
               </Button>
             </Box>
           </Paper>
@@ -253,19 +254,19 @@ export const PublishProjectPage: React.FC = () => {
             elevation={0}
             sx={{
               p: { xs: 3, md: 5 },
-              borderRadius: '16px',
-              backgroundColor: '#131620',
-              border: '1px solid #1E2332',
+              borderRadius: 0,
+              backgroundColor: '#000000',
+              border: '1px solid #FFFFFF',
             }}
           >
             {errorMsg && (
-              <Alert severity="error" sx={{ mb: 4, borderRadius: '8px' }}>
+              <Alert severity="error" sx={{ mb: 4, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF', color: '#FFFFFF' }}>
                 {errorMsg}
               </Alert>
             )}
 
             {/* Section 1: Project Information */}
-            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 3 }}>
+            <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 3, textTransform: 'uppercase' }}>
               1. Project Information
             </Typography>
 
@@ -315,10 +316,10 @@ export const PublishProjectPage: React.FC = () => {
               />
             </Box>
 
-            <Divider sx={{ borderColor: '#1E2332', my: 4 }} />
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 4 }} />
 
             {/* Section 2: Repository Links */}
-            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 3 }}>
+            <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 3, textTransform: 'uppercase' }}>
               2. Repository & Demo Links
             </Typography>
 
@@ -341,10 +342,10 @@ export const PublishProjectPage: React.FC = () => {
               />
             </Box>
 
-            <Divider sx={{ borderColor: '#1E2332', my: 4 }} />
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 4 }} />
 
             {/* Section 3: Tech Stack Tags */}
-            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700, mb: 3 }}>
+            <Typography variant="h6" color="#FFFFFF" sx={{ fontWeight: 900, mb: 3, textTransform: 'uppercase' }}>
               3. Technologies & Stack
             </Typography>
 
@@ -358,8 +359,8 @@ export const PublishProjectPage: React.FC = () => {
                   size="small"
                   sx={{ flexGrow: 1 }}
                 />
-                <Button variant="outlined" onClick={handleAddTech} sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}>
-                  Add Tag
+                <Button variant="outlined" onClick={handleAddTech} sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}>
+                  ADD TAG
                 </Button>
               </Box>
 
@@ -369,22 +370,22 @@ export const PublishProjectPage: React.FC = () => {
                     key={tech}
                     label={tech}
                     onDelete={() => handleRemoveTech(tech)}
-                    sx={{ backgroundColor: '#1E2332', color: '#60A5FA' }}
+                    sx={{ backgroundColor: '#000000', color: '#FFFFFF', border: '1px solid #FFFFFF', borderRadius: 0 }}
                   />
                 ))}
               </Box>
             </Box>
 
-            <Divider sx={{ borderColor: '#1E2332', my: 4 }} />
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 4 }} />
 
             {/* Submit CTA */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               <Button
                 variant="outlined"
                 onClick={() => navigate('/explore')}
-                sx={{ borderColor: '#262D3D', color: '#94A3B8' }}
+                sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0 }}
               >
-                Cancel
+                CANCEL
               </Button>
               <Button
                 type="submit"
@@ -392,9 +393,9 @@ export const PublishProjectPage: React.FC = () => {
                 size="large"
                 startIcon={<PublishIcon />}
                 disabled={txProgress.step !== 'idle' && txProgress.step !== 'failed'}
-                sx={{ px: 4, fontWeight: 700 }}
+                sx={{ px: 4, fontWeight: 800, borderRadius: 0 }}
               >
-                {isConnected ? 'Publish Project' : 'Connect Wallet to Publish'}
+                {isConnected ? 'PUBLISH PROJECT' : 'CONNECT WALLET TO PUBLISH'}
               </Button>
             </Box>
           </Paper>
@@ -402,19 +403,19 @@ export const PublishProjectPage: React.FC = () => {
 
         {/* Transaction Progress Dialog */}
         <Dialog open={txProgress.step !== 'idle' && txProgress.step !== 'confirmed' && txProgress.step !== 'failed'}>
-          <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Executing Midnight Transaction</DialogTitle>
-          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320 }}>
-            <CircularProgress size={48} sx={{ color: '#3B82F6', mb: 3 }} />
-            <Typography variant="body1" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
+          <DialogTitle sx={{ fontWeight: 900, textAlign: 'center', color: '#FFFFFF', textTransform: 'uppercase' }}>Executing Midnight Transaction</DialogTitle>
+          <DialogContent sx={{ p: 4, textAlign: 'center', minWidth: 320, backgroundColor: '#000000' }}>
+            <CircularProgress size={48} sx={{ color: '#FFFFFF', mb: 3 }} />
+            <Typography variant="body1" color="#FFFFFF" sx={{ fontWeight: 700, mb: 1 }}>
               {txProgress.message || 'Processing...'}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Step: {txProgress.step.toUpperCase()}
+            <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 800 }}>
+              STEP: {txProgress.step.toUpperCase()}
             </Typography>
 
             {txProgress.txHash && (
-              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#0B0C10', borderRadius: '6px' }}>
-                <Typography variant="caption" color="#60A5FA" sx={{ fontFamily: 'monospace' }}>
+              <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#000000', border: '1px solid #FFFFFF', borderRadius: 0 }}>
+                <Typography variant="caption" color="#FFFFFF" sx={{ fontFamily: 'monospace' }}>
                   Tx: {txProgress.txHash.slice(0, 16)}...
                 </Typography>
               </Box>
@@ -427,3 +428,4 @@ export const PublishProjectPage: React.FC = () => {
     </Box>
   );
 };
+

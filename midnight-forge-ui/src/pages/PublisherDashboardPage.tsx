@@ -16,22 +16,22 @@ export const PublisherDashboardPage: React.FC = () => {
 
   const handlePublishClick = () => {
     if (!isConnected) {
-      connect();
+      void connect();
     } else {
       navigate('/publish');
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Back Button */}
         <Button
           startIcon={<ArrowBackIcon fontSize="small" />}
           onClick={() => navigate('/explore')}
-          sx={{ color: '#94A3B8', mb: 4, '&:hover': { color: '#F8FAFC' } }}
+          sx={{ color: '#FFFFFF', mb: 4, borderRadius: 0, fontWeight: 700 }}
         >
-          Back to Explore
+          BACK TO EXPLORE
         </Button>
 
         {/* Dashboard Header */}
@@ -46,13 +46,13 @@ export const PublisherDashboardPage: React.FC = () => {
           }}
         >
           <Box>
-            <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
               PUBLISHER MANAGEMENT
             </Typography>
-            <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
-              Publisher Dashboard
+            <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
+              Publisher Hub
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body1" sx={{ mt: 0.5, color: 'rgba(255, 255, 255, 0.75)' }}>
               Manage your published software repositories, open task opportunities, and reward distributions.
             </Typography>
           </Box>
@@ -61,9 +61,9 @@ export const PublisherDashboardPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handlePublishClick}
-            sx={{ fontWeight: 700, px: 3, py: 1.2 }}
+            sx={{ fontWeight: 800, px: 3, py: 1.2, borderRadius: 0 }}
           >
-            Publish New Project
+            PUBLISH NEW PROJECT
           </Button>
         </Box>
 
@@ -72,12 +72,12 @@ export const PublisherDashboardPage: React.FC = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Projects Owned
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>
+                PROJECTS OWNED
               </Typography>
-              <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mt: 1 }}>
+              <Typography variant="h4" color="#FFFFFF" sx={{ fontWeight: 900, mt: 1, fontFamily: 'monospace' }}>
                 {projects.length}
               </Typography>
             </Paper>
@@ -86,12 +86,12 @@ export const PublisherDashboardPage: React.FC = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Total Active Tasks
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>
+                TOTAL ACTIVE TASKS
               </Typography>
-              <Typography variant="h4" color="text.primary" sx={{ fontWeight: 800, mt: 1 }}>
+              <Typography variant="h4" color="#FFFFFF" sx={{ fontWeight: 900, mt: 1, fontFamily: 'monospace' }}>
                 {projects.reduce((acc, p) => acc + (p.openTaskCount || 0), 0)}
               </Typography>
             </Paper>
@@ -100,12 +100,12 @@ export const PublisherDashboardPage: React.FC = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Paper
               elevation={0}
-              sx={{ p: 3, borderRadius: '12px', backgroundColor: '#131620', border: '1px solid #1E2332' }}
+              sx={{ p: 3, borderRadius: 0, backgroundColor: '#000000', border: '1px solid #FFFFFF' }}
             >
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Total Disbursed Rewards
+              <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>
+                TOTAL DISBURSED REWARDS
               </Typography>
-              <Typography variant="h4" color="#10B981" sx={{ fontWeight: 800, mt: 1 }}>
+              <Typography variant="h4" color="#FFFFFF" sx={{ fontWeight: 900, mt: 1, fontFamily: 'monospace' }}>
                 0 tNIGHT
               </Typography>
             </Paper>
@@ -114,7 +114,7 @@ export const PublisherDashboardPage: React.FC = () => {
 
         {/* Projects List */}
         <Box sx={{ mb: 6 }}>
-          <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800, mb: 3 }}>
+          <Typography variant="h5" color="#FFFFFF" sx={{ fontWeight: 900, mb: 3, textTransform: 'uppercase' }}>
             Your Published Repositories
           </Typography>
 
@@ -126,9 +126,9 @@ export const PublisherDashboardPage: React.FC = () => {
                   elevation={0}
                   sx={{
                     p: 4,
-                    borderRadius: '12px',
-                    backgroundColor: '#131620',
-                    border: '1px solid #1E2332',
+                    borderRadius: 0,
+                    backgroundColor: '#000000',
+                    border: '1px solid #FFFFFF',
                   }}
                 >
                   <Box
@@ -143,12 +143,12 @@ export const PublisherDashboardPage: React.FC = () => {
                   >
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <GitHubIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
-                        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                        <GitHubIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />
+                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'rgba(255, 255, 255, 0.7)' }}>
                           {project.githubRepository.replace('https://github.com/', '')}
                         </Typography>
                       </Box>
-                      <Typography variant="h5" color="text.primary" sx={{ fontWeight: 800 }}>
+                      <Typography variant="h5" color="#FFFFFF" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
                         {project.name}
                       </Typography>
                     </Box>
@@ -159,50 +159,51 @@ export const PublisherDashboardPage: React.FC = () => {
                         size="small"
                         startIcon={<SettingsIcon fontSize="small" />}
                         onClick={() => navigate(`/projects/${project.projectId}/manage`)}
-                        sx={{ borderColor: '#262D3D', color: '#F8FAFC' }}
+                        sx={{ borderColor: '#FFFFFF', color: '#FFFFFF', borderRadius: 0, fontWeight: 700 }}
                       >
-                        Manage Project
+                        MANAGE PROJECT
                       </Button>
                       <Button
                         variant="contained"
                         size="small"
                         startIcon={<AddIcon fontSize="small" />}
                         onClick={() => navigate(`/projects/${project.projectId}/manage`)}
+                        sx={{ borderRadius: 0, fontWeight: 800 }}
                       >
-                        Add Opportunity
+                        ADD OPPORTUNITY
                       </Button>
                     </Box>
                   </Box>
 
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.75)' }}>
                     {project.shortDescription}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: 4, pt: 2, borderTop: '1px solid #1E2332', flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', gap: 4, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.2)', flexWrap: 'wrap' }}>
                     <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Open Tasks
+                      <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                        OPEN TASKS
                       </Typography>
-                      <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700 }}>
+                      <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
                         {project.openTaskCount}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Reward Pool
+                      <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                        REWARD POOL
                       </Typography>
-                      <Typography variant="subtitle1" color="#10B981" sx={{ fontWeight: 700 }}>
+                      <Typography variant="subtitle1" color="#FFFFFF" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
                         {project.rewardPool}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                        Status
+                      <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>
+                        STATUS
                       </Typography>
                       <Chip
                         label={project.status}
                         size="small"
-                        sx={{ mt: 0.5, fontWeight: 700, backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}
+                        sx={{ mt: 0.5, fontWeight: 800, backgroundColor: '#000000', color: '#FFFFFF', border: '1px solid #FFFFFF', borderRadius: 0 }}
                       />
                     </Box>
                   </Box>
@@ -211,9 +212,9 @@ export const PublisherDashboardPage: React.FC = () => {
             </Box>
           ) : (
             <EmptyState
-              title="No Published Repositories Yet"
+              title="NO PUBLISHED REPOSITORIES YET"
               description="You haven't registered any repositories on Midnight Network. Publish your first project to start creating contribution opportunities."
-              actionLabel="Publish New Project"
+              actionLabel="PUBLISH NEW PROJECT"
               onAction={handlePublishClick}
             />
           )}
@@ -224,3 +225,4 @@ export const PublisherDashboardPage: React.FC = () => {
     </Box>
   );
 };
+

@@ -39,18 +39,18 @@ export const ExplorePage: React.FC = () => {
   }, [projects, searchQuery, selectedCategory]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0B0C10' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#000000' }}>
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, flexGrow: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 5 }}>
-          <Typography variant="caption" color="#60A5FA" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255, 255, 255, 0.6)' }}>
             DECENTRALIZED MARKETPLACE
           </Typography>
-          <Typography variant="h2" color="text.primary" sx={{ mt: 0.5, fontWeight: 800 }}>
+          <Typography variant="h2" color="#FFFFFF" sx={{ mt: 0.5, fontWeight: 900, textTransform: 'uppercase' }}>
             Explore Repositories & Opportunities
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 650 }}>
-            Browse Midnight ecosystem software projects, inspect contribution needs, and find active tasks.
+          <Typography variant="body1" sx={{ mt: 1, maxWidth: 680, color: 'rgba(255, 255, 255, 0.75)' }}>
+            Browse Midnight ecosystem software projects, inspect contribution needs, and find active tasks with NIGHT bounties.
           </Typography>
         </Box>
 
@@ -62,29 +62,29 @@ export const ExplorePage: React.FC = () => {
             gap: 2,
             mb: 4,
             alignItems: 'center',
-            justify: 'space-between',
+            justifyContent: 'space-between',
           }}
         >
           {/* Search Input */}
           <TextField
-            placeholder="Search by project name, description, or tech stack (e.g. React, Rust)..."
+            placeholder="Search by project name, description, or tech stack (e.g. React, Compact, Rust)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             fullWidth
             sx={{
               maxWidth: { md: 550 },
               '& .MuiOutlinedInput-root': {
-                backgroundColor: '#131620',
-                borderRadius: '8px',
-                borderColor: '#1E2332',
-                '&:hover fieldset': { borderColor: '#3B82F6' },
+                backgroundColor: '#000000',
+                borderRadius: 0,
+                borderColor: '#FFFFFF',
+                '&:hover fieldset': { borderColor: '#FFFFFF' },
               },
             }}
             slotProps={{
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#94A3B8' }} />
+                    <SearchIcon sx={{ color: '#FFFFFF' }} />
                   </InputAdornment>
                 ),
               },
@@ -93,16 +93,16 @@ export const ExplorePage: React.FC = () => {
 
           {/* Sort Selector */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', md: 'auto' } }}>
-            <FormControl size="small" sx={{ minWidth: 160, backgroundColor: '#131620', borderRadius: '8px' }}>
-              <InputLabel id="sort-label" sx={{ color: '#94A3B8' }}>
+            <FormControl size="small" sx={{ minWidth: 160, backgroundColor: '#000000', borderRadius: 0 }}>
+              <InputLabel id="sort-label" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                 Sort By
               </InputLabel>
               <Select
                 labelId="sort-label"
                 value={sortBy}
                 label="Sort By"
-                onChange={(e) => setSortBy(e.target.value)}
-                sx={{ color: '#F8FAFC' }}
+                onChange={(e) => setSortBy(e.target.value as 'newest' | 'tasks')}
+                sx={{ color: '#FFFFFF', borderRadius: 0, '& .MuiOutlinedInput-notchedOutline': { borderColor: '#FFFFFF' } }}
               >
                 <MenuItem value="newest">Newest First</MenuItem>
                 <MenuItem value="tasks">Most Open Tasks</MenuItem>
@@ -113,35 +113,39 @@ export const ExplorePage: React.FC = () => {
 
         {/* Category Pills */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 5 }}>
-          {categories.map((cat) => (
-            <Chip
-              key={cat}
-              label={cat}
-              onClick={() => setSelectedCategory(cat)}
-              sx={{
-                height: 32,
-                px: 1,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                borderRadius: '6px',
-                cursor: 'pointer',
-                backgroundColor: selectedCategory === cat ? '#3B82F6' : '#131620',
-                color: selectedCategory === cat ? '#FFFFFF' : '#94A3B8',
-                border: '1px solid',
-                borderColor: selectedCategory === cat ? '#3B82F6' : '#1E2332',
-                '&:hover': {
-                  backgroundColor: selectedCategory === cat ? '#2563EB' : '#1E2332',
-                },
-              }}
-            />
-          ))}
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <Chip
+                key={cat}
+                label={cat.toUpperCase()}
+                onClick={() => setSelectedCategory(cat)}
+                sx={{
+                  height: 32,
+                  px: 1.5,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  borderRadius: 0,
+                  cursor: 'pointer',
+                  backgroundColor: isSelected ? '#FFFFFF' : '#000000',
+                  color: isSelected ? '#000000' : '#FFFFFF',
+                  border: '1px solid #FFFFFF',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                  },
+                }}
+              />
+            );
+          })}
         </Box>
 
         {/* Results Counter */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <FilterListIcon sx={{ color: '#94A3B8', fontSize: 18 }} />
-          <Typography variant="body2" color="text.secondary">
-            Showing <strong>{filteredProjects.length}</strong> {filteredProjects.length === 1 ? 'project' : 'projects'}
+          <FilterListIcon sx={{ color: '#FFFFFF', fontSize: 18 }} />
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            SHOWING <strong>{filteredProjects.length}</strong> {filteredProjects.length === 1 ? 'PROJECT' : 'PROJECTS'}
           </Typography>
         </Box>
 
@@ -154,9 +158,9 @@ export const ExplorePage: React.FC = () => {
           </Box>
         ) : (
           <EmptyState
-            title="No Projects Found"
+            title="NO PROJECTS FOUND"
             description="No repositories matched your search query or selected category. Try resetting search filters."
-            actionLabel="Reset Filters"
+            actionLabel="RESET FILTERS"
             onAction={() => {
               setSearchQuery('');
               setSelectedCategory('All');
@@ -169,3 +173,4 @@ export const ExplorePage: React.FC = () => {
     </Box>
   );
 };
+
